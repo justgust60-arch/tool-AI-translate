@@ -454,7 +454,9 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // Data Store
+        // ⚠️ ដាក់ NGROK URL ដែលទទួលបានពី Google Colab របស់អ្នកនៅទីនេះ៖
+        const BACKEND_URL = "https://recliner-pulsate-unbraided.ngrok-free.dev"; 
+
         let selectedFile = null;
         let subtitlesData = [
             { id: 1, time: "00:00:06 - 00:00:10", chinese: "这里是我们寻找多年的秘密地方。", khmer: "ទីនេះគឺជាកន្លែងសម្ងាត់ដែលយើងបានស្វែងរកជាច្រើនឆ្នាំមកហើយ។" },
@@ -463,14 +465,14 @@
         ];
 
         function switchMainTab(tab) {
-            // Main switch
+            // Main tab navigation logic
         }
 
         function goToStep(stepNumber) {
             document.querySelectorAll('.step-panel').forEach(panel => panel.classList.add('hidden'));
             document.getElementById(`step-panel-${stepNumber}`).classList.remove('hidden');
 
-            document.querySelectorAll('.step-btn').forEach((btn, idx) => {
+            document.querySelectorAll('.step-btn').forEach((btn) => {
                 btn.className = "step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0 sm:shrink";
                 const spanNum = btn.querySelector('span');
                 if(spanNum) spanNum.className = "w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-xs shrink-0";
@@ -500,22 +502,19 @@
             alert('បានផ្ទុកវីដេអូគំរូរួចរាល់!');
         }
 
-        // Backend Split Video API Call
         async function splitVideoOnBackend() {
             if (!selectedFile) {
                 alert('សូមជ្រើសរើសឯកសារវីដេអូជាមុនសិន!');
                 return;
             }
-            const backendUrl = prompt("សូមបញ្ជាក់ Python Backend Ngrok URL របស់អ្នក:", "https://your-ngrok-url.ngrok-free.dev");
-            if (!backendUrl) return;
 
             const formData = new FormData();
             formData.append("file", selectedFile);
             formData.append("chunk_duration_min", 15);
 
             try {
-                alert("កំពុងបញ្ជូនសំណើទៅកាន់ Python Backend server...");
-                const response = await fetch(`${backendUrl}/api/split-video`, {
+                alert("កំពុងបញ្ជូនវីដេអូទៅកាន់ Python Backend... សូមរង់ចាំបន្តិច!");
+                const response = await fetch(`${BACKEND_URL}/api/split-video`, {
                     method: 'POST',
                     body: formData
                 });
@@ -526,7 +525,7 @@
                     alert('មានបញ្ហា៖ ' + (data.detail || 'មិនអាចកាត់វីដេអូបានទេ'));
                 }
             } catch(err) {
-                alert('Error connecting to backend: ' + err.message);
+                alert(' Error ភ្ជាប់ទៅ Backend: ' + err.message + '\nសូមពិនិត្យមើលថា Link Ngrok ក្នុងកូដត្រូវគ្នានឹង Google Colab ដែរឬទេ!');
             }
         }
 
@@ -546,7 +545,7 @@
                     document.getElementById('whisper-status-text').innerText = "ទាញយកអត្ថបទចិនបានរួចរាល់!";
                     renderChineseSubtitles();
                 }
-            }, 200);
+            }, 150);
         }
 
         function renderChineseSubtitles() {
@@ -594,11 +593,7 @@
             `).join('');
         }
 
-        // Real Edge-TTS Python Backend API integration for Khmer Audio Generation
         async function generateKhmerAudioTTS() {
-            const backendUrl = prompt("សូមបញ្ជាក់ Python Backend Ngrok URL របស់អ្នក (ឧ. https://xxxx.ngrok-free.dev):", "https://your-ngrok-url.ngrok-free.dev");
-            if (!backendUrl) return;
-
             const gender = document.getElementById('voice-select').value;
             const listContainer = document.getElementById('tts-audio-list');
             listContainer.innerHTML = `<div class="p-4 bg-slate-950 rounded-xl text-center text-xs text-amber-400 animate-pulse">កំពុងបង្កើតសំឡេង AI ខ្មែរតាម Edge-TTS...</div>`;
@@ -611,7 +606,7 @@
                 formData.append('gender', gender);
 
                 try {
-                    const response = await fetch(`${backendUrl}/api/generate-khmer-audio`, {
+                    const response = await fetch(`${BACKEND_URL}/api/generate-khmer-audio`, {
                         method: 'POST',
                         body: formData
                     });
