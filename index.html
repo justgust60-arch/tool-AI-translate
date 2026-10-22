@@ -433,6 +433,12 @@
             <section id="step-panel-5" class="step-panel hidden space-y-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6 text-center">
                     <h2 class="text-base font-bold text-slate-100">វីដេអូបកប្រែជាភាសាខ្មែររួចរាល់ (Export Movie)</h2>
+                    
+                    <!-- Trigger Export & Merge Button -->
+                    <button onclick="exportFinalMovie()" class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg">
+                        <i class="fa-solid fa-clapperboard mr-1"></i> ចុចទីនេះដើម្បីបញ្ចូលសំឡេងខ្មែរចូលវីដេអូ (Generate Final Movie)
+                    </button>
+
                     <div class="aspect-video bg-slate-950 rounded-xl flex items-center justify-center border border-slate-800 relative overflow-hidden">
                         <video id="result-video-player" controls class="w-full h-full object-contain">
                             <source src="" type="video/mp4">
@@ -454,19 +460,19 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // ⚠️ ដាក់ NGROK URL ដែលទទួលបានពី Google Colab របស់អ្នកនៅទីនេះ៖
-        const BACKEND_URL = "https://recliner-pulsate-unbraided.ngrok-free.dev"; 
+        // 🔗 ដាក់ Ngrok URL របស់អ្នកនៅទីនេះ៖
+        const BACKEND_URL = "https://recliner-pulsate-unbraided.ngrok-free.dev";
 
         let selectedFile = null;
+        let lastGeneratedAudioUrl = null; // រក្សាទុក Audio URL ចុងក្រោយ
+
         let subtitlesData = [
             { id: 1, time: "00:00:06 - 00:00:10", chinese: "这里是我们寻找多年的秘密地方。", khmer: "ទីនេះគឺជាកន្លែងសម្ងាត់ដែលយើងបានស្វែងរកជាច្រើនឆ្នាំមកហើយ។" },
             { id: 2, time: "00:00:11 - 00:00:15", chinese: "人工智能技术正在改变我们的生活。", khmer: "បច្ចេកវិទ្យា AI កំពុងផ្លាស់ប្ដូរជីវិតរបស់យើងនៅពេលបច្ចុប្បន្ន។" },
             { id: 3, time: "00:00:16 - 00:00:20", chinese: "欢迎大家加入Python后端sotharith工具。", khmer: "សូមស្វាគមន៍អ្នកទាំងអស់គ្នាចូលរួមផ្លាស់ប្ដូរការបញ្ចូលសំឡេងស្វ័យប្រវត្តិនេះ។" }
         ];
 
-        function switchMainTab(tab) {
-            // Main tab navigation logic
-        }
+        function switchMainTab(tab) {}
 
         function goToStep(stepNumber) {
             document.querySelectorAll('.step-panel').forEach(panel => panel.classList.add('hidden'));
@@ -525,7 +531,7 @@
                     alert('មានបញ្ហា៖ ' + (data.detail || 'មិនអាចកាត់វីដេអូបានទេ'));
                 }
             } catch(err) {
-                alert(' Error ភ្ជាប់ទៅ Backend: ' + err.message + '\nសូមពិនិត្យមើលថា Link Ngrok ក្នុងកូដត្រូវគ្នានឹង Google Colab ដែរឬទេ!');
+                alert('Error ភ្ជាប់ទៅ Backend: ' + err.message);
             }
         }
 
@@ -614,6 +620,7 @@
                     if (response.ok) {
                         const blob = await response.blob();
                         const audioUrl = URL.createObjectURL(blob);
+                        lastGeneratedAudioUrl = audioUrl; // เก็บ URL เสียงล่าสุด
                         htmlContent += `
                             <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between gap-3">
                                 <div class="overflow-hidden">
@@ -624,13 +631,61 @@
                             </div>
                         `;
                     } else {
-                        htmlContent += `<div class="p-3 bg-red-950/40 text-red-400 text-xs rounded-xl">កំហុសក្នុងការបង្កើតសំឡេងសម្រាប់ប្រយោគទី ${i+1}</div>`;
+                        htmlContent += `<div class="p-3 bg-red-950/40 text-red-400 text-xs rounded-xl">កំហុសក្នុងការបង្កើតសំឡេងสำหรับប្រយោគទី ${i+1}</div>`;
                     }
                 } catch (err) {
                     htmlContent += `<div class="p-3 bg-red-950/40 text-red-400 text-xs rounded-xl">មិនអាចតភ្ជាប់ទៅ Backend ទេ។</div>`;
                 }
             }
             listContainer.innerHTML = htmlContent;
+        }
+
+        // 🎬 មុខងារថ្មី៖ รวมเสียงและวิดีโอเข้าด้วยกัน แสดงผลใน Step 5
+        async function exportFinalMovie() {
+            if (!selectedFile) {
+                alert("សូមជ្រើសរើសឯកសារវីដេអូដើមនៅជំហានទី ១ ជាមុនសិន!");
+                goToStep(1);
+                return;
+            }
+            if (!lastGeneratedAudioUrl) {
+                alert("សូមបង្កើតសំឡេង AI ខ្មែរនៅជំហានទី ៤ ជាមុនសិន!");
+                goToStep(4);
+                return;
+            }
+
+            const player = document.getElementById('result-video-player');
+            const downloadBtn = document.getElementById('download-movie-btn');
+
+            alert("កំពុងបញ្ចូលសំឡេងខ្មែរចូលទៅក្នុងវីដេអូຜ່ານ FFmpeg... សូមរង់ចាំបន្តិច!");
+
+            try {
+                const audioBlob = await fetch(lastGeneratedAudioUrl).then(r => r.blob());
+                const formData = new FormData();
+                formData.append("video_file", selectedFile);
+                formData.append("audio_file", audioBlob, "khmer_audio.mp3");
+
+                const response = await fetch(`${BACKEND_URL}/api/merge-video`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const finalVideoBlob = await response.blob();
+                    const finalVideoUrl = URL.createObjectURL(finalVideoBlob);
+
+                    player.src = finalVideoUrl;
+                    player.load();
+
+                    downloadBtn.href = finalVideoUrl;
+                    downloadBtn.download = "khmer_dubbed_movie.mp4";
+
+                    alert("ជោគជ័យ! វីដេអូបញ្ចូលសំឡេងខ្មែរត្រូវបានបង្កើតរួចរាល់ អ្នកអាចចុច Play ឬ Download ได้เลย។");
+                } else {
+                    alert("មានបញ្ហាក្នុងការรวมวิดีโอจาก Backend!");
+                }
+            } catch (err) {
+                alert("កំហុស៖ " + err.message);
+            }
         }
     </script>
 </body>
