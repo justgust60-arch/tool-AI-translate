@@ -12,19 +12,19 @@
             theme: {
                 extend: {
                     colors: {
-                        gold: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
+                        gold: { 
+                            400: '#fbbf24', 
+                            500: '#f59e0b', 
+                            600: '#d97706' 
                         },
-                        cambodia: {
-                            red: '#e63946',
-                            blue: '#1d3557',
-                            gold: '#ffb703'
+                        cambodia: { 
+                            red: '#e63946', 
+                            blue: '#1d3557', 
+                            gold: '#ffb703' 
                         }
                     },
-                    fontFamily: {
-                        kantumruuy: ['Kantumruuy Pro', 'Hanuman', 'Battambang', 'sans-serif'],
+                    fontFamily: { 
+                        kantumruuy: ['Kantumruuy Pro', 'Hanuman', 'Battambang', 'sans-serif'] 
                     }
                 }
             }
@@ -37,43 +37,40 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Kantumruuy Pro', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+        body { 
+            font-family: 'Kantumruuy Pro', sans-serif; 
+            background-color: #0f172a; 
+            color: #f8fafc; 
         }
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        ::-webkit-scrollbar { 
+            width: 8px; 
+            height: 8px; 
         }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
+        ::-webkit-scrollbar-track { 
+            background: #1e293b; 
         }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
+        ::-webkit-scrollbar-thumb { 
+            background: #475569; 
+            border-radius: 4px; 
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
+        ::-webkit-scrollbar-thumb:hover { 
+            background: #64748b; 
         }
-        .glow-red {
-            box-shadow: 0 0 20px rgba(230, 57, 70, 0.3);
+        .glow-gold { 
+            box-shadow: 0 0 15px rgba(255, 183, 3, 0.25); 
         }
-        .glow-gold {
-            box-shadow: 0 0 15px rgba(255, 183, 3, 0.25);
+        .no-scrollbar::-webkit-scrollbar { 
+            display: none; 
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .no-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
 
-    <!-- Header Navigation -->
+    <!-- Header Navigation Section -->
     <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div class="flex items-center space-x-3 text-center sm:text-left">
@@ -87,18 +84,6 @@
                     <p class="text-[10px] sm:text-xs text-slate-400">ប្រព័ន្ធបកប្រែ និងបញ្ចូលសំឡេងខ្មែរស្វ័យប្រវត្តិ (Python Backend Enabled)</p>
                 </div>
             </div>
-
-            <!-- Header Action Buttons -->
-            <div class="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
-                <button onclick="switchMainTab('wizard')" id="tab-wizard-btn" class="flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-medium transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-sm"></i>
-                    <span>ដំណើរការបកប្រែ</span>
-                </button>
-                <button onclick="switchMainTab('chunk-processor')" id="tab-chunk-btn" class="flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-layer-group text-red-400"></i>
-                    <span>បំបែករឿង ៣ ម៉ោង</span>
-                </button>
-            </div>
         </div>
     </header>
 
@@ -107,126 +92,61 @@
 
         <!-- Wizard Navigation Steps Header -->
         <nav id="wizard-nav" class="flex overflow-x-auto sm:grid sm:grid-cols-5 gap-2 p-2 bg-slate-900/90 rounded-2xl border border-slate-800 text-xs font-medium no-scrollbar">
-            <button onclick="goToStep(1)" id="step-btn-1" class="step-btn active min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition bg-red-600 text-white font-semibold shadow shrink-0 sm:shrink">
+            <button onclick="goToStep(1)" id="step-btn-1" class="step-btn active min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition bg-red-600 text-white font-semibold shadow shrink-0">
                 <span class="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-xs shrink-0">១</span>
                 <span class="truncate">បញ្ចូលវីដេអូ</span>
             </button>
-            <button onclick="goToStep(2)" id="step-btn-2" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0 sm:shrink">
+            <button onclick="goToStep(2)" id="step-btn-2" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0">
                 <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-xs shrink-0">២</span>
                 <span class="truncate">ទាញយកសំឡេង</span>
             </button>
-            <button onclick="goToStep(3)" id="step-btn-3" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0 sm:shrink">
+            <button onclick="goToStep(3)" id="step-btn-3" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0">
                 <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-xs shrink-0">៣</span>
                 <span class="truncate">បកប្រែជាខ្មែរ</span>
             </button>
-            <button onclick="goToStep(4)" id="step-btn-4" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0 sm:shrink">
+            <button onclick="goToStep(4)" id="step-btn-4" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0">
                 <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-xs shrink-0">៤</span>
                 <span class="truncate">សំឡេង AI</span>
             </button>
-            <button onclick="goToStep(5)" id="step-btn-5" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0 sm:shrink">
+            <button onclick="goToStep(5)" id="step-btn-5" class="step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0">
                 <span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-xs shrink-0">៥</span>
                 <span class="truncate">មើលផលសម្រេច</span>
             </button>
         </nav>
 
-        <!-- Main View Panels -->
+        <!-- Main View Panels Content -->
         <div id="main-tabs-content" class="flex-1">
 
             <!-- STEP 1: Video Input & Upload Section -->
             <section id="step-panel-1" class="step-panel space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Upload Left Box -->
                     <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col justify-between space-y-6">
                         <div>
                             <h2 class="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2 mb-1">
                                 <i class="fa-solid fa-file-video text-red-500"></i> ជ្រើសរើស ឬ ផ្ទេរវីដេអូរឿងភាគចិន (Upload Chinese Movie)
                             </h2>
-                            <p class="text-xs text-slate-400">គាំទ្រទ្រង់ទ្រាយ MP4, MKV, WebM ឬប្រើប្រាស់គំរូរឿងចិនគំរូខាងក្រោមដើម្បីតេស្ត</p>
+                            <p class="text-xs text-slate-400">គាំទ្រទ្រង់ទ្រាយ MP4, MKV, WebM សម្រាប់ដំណើរការបកប្រែពេញរឿង</p>
                         </div>
-
-                        <!-- Drag & Drop Zone -->
                         <div id="drop-zone" onclick="document.getElementById('video-file-input').click()" class="border-2 border-dashed border-slate-700 hover:border-red-500/60 bg-slate-950/50 rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer flex flex-col items-center justify-center gap-3">
-                            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800/80 text-amber-400 flex items-center justify-center text-xl sm:text-2xl shadow-inner">
+                            <div class="w-12 h-12 rounded-full bg-slate-800/80 text-amber-400 flex items-center justify-center text-xl shadow-inner">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
                             </div>
                             <div>
                                 <p id="file-name-display" class="text-xs sm:text-sm font-semibold text-slate-200">ចុចទីនេះដើម្បីជ្រើសរើសវីដេអូ ឬ ទាញទម្លាក់ចូល (Drag & Drop)</p>
-                                <p class="text-[10px] sm:text-xs text-slate-500 mt-1">ភ្ជាប់ទៅ Python Backend • MP4, AVI, MOV</p>
                             </div>
                             <input type="file" id="video-file-input" class="hidden" accept="video/*" onchange="handleFileSelect(event)">
                         </div>
-
-                        <!-- Backend API Actions & Video URL Input -->
                         <div class="space-y-3">
-                            <label class="text-xs font-medium text-slate-300 block">ឬ បញ្ចូលតំណភ្ជាប់វីដេអូ (Direct Video / Stream URL):</label>
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <input type="url" id="video-url-input" placeholder="https://example.com/chinese_drama_sample.mp4" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-red-500 text-slate-200">
-                                <button onclick="loadVideoFromUrl()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition w-full sm:w-auto">
-                                    ទាញយក
-                                </button>
-                            </div>
-
                             <button onclick="splitVideoOnBackend()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow">
                                 <i class="fa-solid fa-scissors"></i>
                                 <span>បំបែកវីដេអូជាមួយ Python Backend (`/api/split-video`)</span>
                             </button>
                         </div>
-
-                        <!-- Continue Button -->
                         <div class="flex justify-end border-t border-slate-800/80 pt-4">
-                            <button onclick="goToStep(2)" class="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
-                                <span>បន្តទៅទាញយកអត្ថបទចិន (Whisper STT)</span>
+                            <button onclick="goToStep(2)" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-600 to-amber-600 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
+                                <span>បន្តទៅទាញយកអត្ថបទចិន</span>
                                 <i class="fa-solid fa-arrow-right"></i>
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- Preset Samples & Info -->
-                    <div class="space-y-6">
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-                            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fa-solid fa-film text-amber-400"></i> វីដេអូរឿងចិនគំរូ (Demo Samples)
-                            </h3>
-                            <div class="space-y-3">
-                                <div onclick="loadDemoVideo('sample1')" class="p-3 bg-slate-950 border border-slate-800/80 rounded-xl hover:border-red-500/50 transition cursor-pointer flex gap-3 items-center group">
-                                    <div class="w-16 h-12 rounded-lg bg-slate-800 relative overflow-hidden flex-shrink-0 flex items-center justify-center text-amber-400">
-                                        <i class="fa-solid fa-play group-hover:scale-125 transition"></i>
-                                    </div>
-                                    <div class="overflow-hidden">
-                                        <h4 class="text-xs font-semibold text-slate-200 truncate">រឿងចិនបុរាណ៖ "សមរភូមិយុទ្ធសិល្ប៍"</h4>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">Chinese Wuxia Drama Clip • 45s</p>
-                                    </div>
-                                </div>
-                                <div onclick="loadDemoVideo('sample2')" class="p-3 bg-slate-950 border border-slate-800/80 rounded-xl hover:border-red-500/50 transition cursor-pointer flex gap-3 items-center group">
-                                    <div class="w-16 h-12 rounded-lg bg-slate-800 relative overflow-hidden flex-shrink-0 flex items-center justify-center text-amber-400">
-                                        <i class="fa-solid fa-play group-hover:scale-125 transition"></i>
-                                    </div>
-                                    <div class="overflow-hidden">
-                                        <h4 class="text-xs font-semibold text-slate-200 truncate">រឿងចិនទំនើប៖ "ស្នេហាក្រុងស៊ាងហៃ"</h4>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">Modern Romantic Drama • 30s</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800/80 rounded-2xl p-4 sm:p-5 space-y-3">
-                            <h3 class="text-xs font-bold text-amber-400 flex items-center gap-2">
-                                <i class="fa-solid fa-circle-info"></i> របៀបដំណើរការប្រព័ន្ធ (Workflow)
-                            </h3>
-                            <ul class="text-[11px] text-slate-400 space-y-2 leading-relaxed">
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-check text-green-400 mt-0.5 text-[10px] shrink-0"></i>
-                                    <span>បំប្លែងសំឡេងចិនទៅជា Subtitle ដោយប្រើ **OpenAI Whisper**</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-check text-green-400 mt-0.5 text-[10px] shrink-0"></i>
-                                    <span>បកប្រែ Subtitle ទៅជាអក្សរខ្មែរដោយ **Gemini / DeepL AI**</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i class="fa-solid fa-check text-green-400 mt-0.5 text-[10px] shrink-0"></i>
-                                    <span>បង្កើតសំឡេងនិយាយខ្មែរតាម **Edge-TTS Neural Voice (ឥតគិតថ្លៃ)**</span>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -235,127 +155,69 @@
             <!-- STEP 2: Chinese Transcription (Whisper Speech-to-Text) -->
             <section id="step-panel-2" class="step-panel hidden space-y-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-                        <div>
-                            <h2 class="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
-                                <i class="fa-solid fa-waveform text-amber-400"></i> ទាញយកអត្ថបទចិន និងពេលវេលា (Chinese STT)
-                            </h2>
-                            <p class="text-xs text-slate-400">ប្រព័ន្ធកំពុងវិភាគសំឡេងចិន និងទាញយក Timestamps ស្វ័យប្រវត្តិ</p>
-                        </div>
-                        <button onclick="simulateWhisperExtract()" id="start-whisper-btn" class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>ចាប់ផ្តើមទាញយកអត្ថបទ (Run Whisper STT)</span>
-                        </button>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                        <h2 class="text-sm font-bold text-slate-100"><i class="fa-solid fa-waveform text-amber-400"></i> ទាញយកអត្ថបទចិន (Chinese STT)</h2>
+                        <button onclick="simulateWhisperExtract()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition">ចាប់ផ្តើម Whisper STT</button>
                     </div>
-
-                    <div id="whisper-progress-container" class="hidden space-y-2 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <div class="flex justify-between text-xs font-semibold">
-                            <span id="whisper-status-text" class="text-amber-400 animate-pulse">កំពុងវិភាគសំឡេងចិនតាមរយៈ Whisper AI...</span>
-                            <span id="whisper-percent-text" class="text-slate-400">0%</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                            <div id="whisper-bar" class="h-full bg-gradient-to-r from-amber-500 to-red-500 w-0 transition-all duration-300"></div>
-                        </div>
+                    <div class="max-h-80 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+                        <table class="w-full text-left text-xs">
+                            <tbody id="chinese-subtitles-body">
+                                <tr><td class="p-4 text-center text-slate-500">សូមចុចប៊ូតុងខាងលើដើម្បីចាប់ផ្តើមវិភាគសំឡេង</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-                            <span>បញ្ជីអត្ថបទដើមភាសាចិន (Extracted Chinese Captions):</span>
-                            <span id="chinese-count-badge" class="bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full text-[10px]">0 ចំណុច</span>
-                        </div>
-                        <div class="max-h-80 overflow-x-auto overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
-                            <table class="w-full text-left text-xs min-w-[500px]">
-                                <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 sticky top-0">
-                                    <tr>
-                                        <th class="p-3 w-12">#</th>
-                                        <th class="p-3 w-32">ពេលវេលា (Time)</th>
-                                        <th class="p-3">អត្ថបទចិនដើម (Chinese Script)</th>
-                                        <th class="p-3 w-24 text-center">ស្ថានភាព</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="chinese-subtitles-body" class="divide-y divide-slate-800/60 text-slate-300">
-                                    <tr>
-                                        <td colspan="4" class="p-8 text-center text-slate-500 italic">
-                                            សូមចុចប៊ូតុង "ចាប់ផ្តើមទាញយកអត្ថបទ" ដើម្បីចាប់ផ្តើមវិភាគ
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row justify-between gap-3 border-t border-slate-800/80 pt-4">
-                        <button onclick="goToStep(1)" class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> ត្រឡប់ក្រោយ
-                        </button>
-                        <button onclick="goToStep(3)" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
-                            <span>បន្តទៅបកប្រែជាភាសាខ្មែរ</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
+                    <div class="flex justify-between">
+                        <button onclick="goToStep(1)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">ត្រឡប់</button>
+                        <button onclick="goToStep(3)" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs">បន្តទៅជំហានទី ៣</button>
                     </div>
                 </div>
             </section>
 
-            <!-- STEP 3: AI Khmer Translation & Editor -->
+            <!-- STEP 3: AI Khmer Translation & Editor (Fully Detailed) -->
             <section id="step-panel-3" class="step-panel hidden space-y-6">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                         <div>
                             <h2 class="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
-                                <i class="fa-solid fa-language text-blue-400"></i> បកប្រែជាភាសាខ្មែរ និងកែសម្រួល (Khmer Translation)
+                                <i class="fa-solid fa-language text-blue-400"></i> ជំហានទី ៣៖ បកប្រែជាភាសាខ្មែរ និងកែសម្រួល
                             </h2>
-                            <p class="text-xs text-slate-400">ប្រើប្រាស់ Gemini / DeepL AI ដើម្បីបកប្រែអត្ថបទចិនទៅជាខ្មែរ អ្នកអាចកែប្រែដោយផ្ទាល់ក្នុងតារាង</p>
+                            <p class="text-xs text-slate-400 mt-0.5">ប្រើប្រាស់ប្រព័ន្ធ AI ដើម្បីបកប្រែ និងអនុញ្ញាតឱ្យអ្នកកែសម្រួលអត្ថបទខ្មែរដោយផ្ទាល់</p>
                         </div>
-                        <button onclick="runAutoTranslation()" class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow">
+                        <button onclick="runAutoTranslation()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-2 justify-center">
                             <i class="fa-solid fa-robot"></i>
-                            <span>បកប្រែស្វ័យប្រវត្តិ (Translate to Khmer)</span>
+                            <span>បកប្រែស្វ័យប្រវត្តិ (Auto Translate)</span>
                         </button>
                     </div>
-
-                    <div id="translate-progress-container" class="hidden space-y-2 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                        <div class="flex justify-between text-xs font-semibold">
-                            <span class="text-blue-400 animate-pulse">Gemini AI កំពុងបកប្រែសាច់រឿងចិនទៅជាភាសាខ្មែរ...</span>
+                    
+                    <div id="translate-progress-container" class="hidden space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-blue-400 animate-pulse">កំពុងបកប្រែអត្ថបទចិនទៅជាខ្មែរ...</span>
                             <span id="translate-percent-text" class="text-slate-400">0%</span>
                         </div>
                         <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                            <div id="translate-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+                            <div id="translate-bar" class="h-full bg-blue-500 w-0 transition-all"></div>
                         </div>
                     </div>
 
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-                            <span>តារាងផ្ទៀងផ្ទាត់ និងកែសម្រួលអត្ថបទខ្មែរ (Editable Khmer Subtitles):</span>
-                            <span class="text-[10px] sm:text-[11px] text-amber-400"><i class="fa-solid fa-pen-to-square"></i> ចុចលើប្រអប់ខ្មែរដើម្បីកែប្រែ</span>
-                        </div>
-                        <div class="max-h-96 overflow-x-auto overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
-                            <table class="w-full text-left text-xs min-w-[600px]">
-                                <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 sticky top-0">
-                                    <tr>
-                                        <th class="p-3 w-10">#</th>
-                                        <th class="p-3 w-24">ពេលវេលា</th>
-                                        <th class="p-3 w-5/12">អក្សរចិនដើម (Chinese)</th>
-                                        <th class="p-3 w-5/12">អក្សរខ្មែរបកប្រែ (Khmer Translation)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="khmer-translation-body" class="divide-y divide-slate-800/60 text-slate-300">
-                                    <tr>
-                                        <td colspan="4" class="p-8 text-center text-slate-500 italic">
-                                            សូមទាញយកអត្ថបទចិនជាមុនសិន ឬចុច "បកប្រែស្វ័យប្រវត្តិ"
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="max-h-96 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 sticky top-0">
+                                <tr>
+                                    <th class="p-3 w-10">#</th>
+                                    <th class="p-3 w-28">ពេលវេលា</th>
+                                    <th class="p-3 w-4/12">អក្សរចិនដើម</th>
+                                    <th class="p-3">អក្សរខ្មែរបកប្រែ (អាចកែប្រែបានដោយផ្ទាល់)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="khmer-translation-body" class="divide-y divide-slate-800/60">
+                                <tr><td colspan="4" class="p-6 text-center text-slate-500">សូមទាញយកអត្ថបទចិនពីជំហានទី ២ ជាមុនសិន ឬចុចប៊ូតុងបកប្រែស្វ័យប្រវត្តិ</td></tr>
+                            </tbody>
+                        </table>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row justify-between gap-3 border-t border-slate-800/80 pt-4">
-                        <button onclick="goToStep(2)" class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> ត្រឡប់ក្រោយ
-                        </button>
-                        <button onclick="goToStep(4)" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
-                            <span>បន្តទៅបង្កើតសំឡេង AI ខ្មែរ</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
+                    <div class="flex justify-between border-t border-slate-800/80 pt-4">
+                        <button onclick="goToStep(2)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs transition">ត្រឡប់ក្រោយ</button>
+                        <button onclick="goToStep(4)" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs transition">បន្តទៅបង្កើតសំឡេង AI</button>
                     </div>
                 </div>
             </section>
@@ -363,67 +225,21 @@
             <!-- STEP 4: Khmer AI Voice Synthesis (TTS) -->
             <section id="step-panel-4" class="step-panel hidden space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
-                        <div>
-                            <h2 class="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2 mb-1">
-                                <i class="fa-solid fa-microphone-lines text-red-500"></i> កំណត់សំឡេង AI ខ្មែរ (TTS Settings)
-                            </h2>
-                            <p class="text-xs text-slate-400">ជ្រើសរើសសំឡេង និងកែសម្រួល Pitch / Speed តាមតម្រូវការ</p>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-xs font-semibold text-slate-300 block mb-1.5">ជ្រើសរើសតួសំឡេង AI ខ្មែរ (Voice Actor):</label>
-                                <select id="voice-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-red-500">
-                                    <option value="male">ពិសិដ្ឋ (km-KH-PisethNeural) - សំឡេងប្រុស</option>
-                                    <option value="female" selected>ស្រីមុំ (km-KH-SreymomNeural) - សំឡេងស្រី</option>
-                                </select>
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <div class="flex justify-between text-xs">
-                                    <span class="text-slate-300">ល្បឿននិយាយ (Speed):</span>
-                                    <span id="speed-val" class="text-amber-400 font-mono">1.0x</span>
-                                </div>
-                                <input type="range" id="speed-range" min="0.5" max="1.5" step="0.1" value="1.0" oninput="document.getElementById('speed-val').innerText = this.value + 'x'" class="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-                            </div>
-
-                            <div class="p-3 bg-slate-950 border border-slate-800/80 rounded-xl space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-xs font-semibold text-slate-300">រក្សាភ្លេងរឿងដើម (Audio Ducking):</label>
-                                    <input type="checkbox" id="audio-ducking" checked class="w-4 h-4 accent-red-600 rounded">
-                                </div>
-                                <p class="text-[10px] text-slate-500">បន្ថយសំឡេងនិយាយចិនដើម ៣០% រួចបញ្ចូលសំឡេងខ្មែរពីលើ</p>
-                            </div>
-                        </div>
-
-                        <button onclick="generateKhmerAudioTTS()" class="w-full py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>បង្កើតសំឡេង AI ខ្មែរទាំងអស់ (Synthesize)</span>
-                        </button>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
+                        <h2 class="text-sm font-bold text-slate-100">កំណត់សំឡេង AI ខ្មែរ</h2>
+                        <select id="voice-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200">
+                            <option value="female" selected>ស្រីមុំ (km-KH-SreymomNeural)</option>
+                            <option value="male">ពិសិដ្ឋ (km-KH-PisethNeural)</option>
+                        </select>
+                        <button onclick="generateKhmerAudioTTS()" class="w-full py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold rounded-xl text-xs transition">បង្កើតសំឡេង Preview</button>
                     </div>
-
-                    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col justify-between space-y-6">
-                        <div class="space-y-4">
-                            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                                <i class="fa-solid fa-headphones text-amber-400"></i> ស្តាប់សាកល្បងសំឡេង AI ខ្មែរ (Audio Preview)
-                            </h3>
-
-                            <div id="tts-audio-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                                <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center text-xs text-slate-500 italic">
-                                    សូមចុចប៊ូតុង "បង្កើតសំឡេង AI ខ្មែរទាំងអស់" ដើម្បីស្ដាប់សំឡេងសាកល្បង
-                                </div>
-                            </div>
+                    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col justify-between space-y-4">
+                        <div id="tts-audio-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                            <div class="p-4 bg-slate-950 text-center text-xs text-slate-500 italic">ស្តាប់សាកល្បងសំឡេង AI នៅទីនេះ</div>
                         </div>
-
-                        <div class="flex flex-col sm:flex-row justify-between gap-3 border-t border-slate-800/80 pt-4">
-                            <button onclick="goToStep(3)" class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition">
-                                <i class="fa-solid fa-arrow-left mr-1"></i> ត្រឡប់ក្រោយ
-                            </button>
-                            <button onclick="goToStep(5)" class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
-                                <span>បន្តទៅមើលវីដេអូចុងក្រោយ</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </button>
+                        <div class="flex justify-between pt-2 border-t border-slate-800">
+                            <button onclick="goToStep(3)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">ត្រឡប់</button>
+                            <button onclick="goToStep(5)" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs">បន្តទៅមើលផលសម្រេច</button>
                         </div>
                     </div>
                 </div>
@@ -441,13 +257,10 @@
                     <div class="aspect-video bg-slate-950 rounded-xl flex items-center justify-center border border-slate-800 relative overflow-hidden">
                         <video id="result-video-player" controls class="w-full h-full object-contain">
                             <source src="" type="video/mp4">
-                            Browser របស់អ្នកមិនគាំទ្រ Video Player ទេ។
                         </video>
                     </div>
                     <div class="flex justify-center gap-4">
-                        <button onclick="goToStep(4)" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition">
-                            ត្រឡប់ក្រោយ
-                        </button>
+                        <button onclick="goToStep(4)" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs">ត្រឡប់</button>
                         <a id="download-movie-btn" href="#" download="khmer_dubbed_movie.mp4" class="px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-2">
                             <i class="fa-solid fa-download"></i> ទាញយកវីដេអូចុងក្រោយ (Export Movie)
                         </a>
@@ -459,7 +272,7 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // 🔗 ដាក់ Ngrok URL របស់អ្នកនៅទីនេះ៖
+        // 🔗 ដាក់ Ngrok URL ថ្មីរបស់អ្នកនៅទីនេះ
         const BACKEND_URL = "https://ladder-tackle-perplexed.ngrok-free.dev";
 
         let selectedFile = null;
@@ -469,24 +282,17 @@
             { id: 3, time: "00:00:16 - 00:00:20", chinese: "欢迎大家加入Python后端sotharith工具。", khmer: "សូមស្វាគមន៍អ្នកទាំងអស់គ្នាចូលរួមផ្លាស់ប្ដូរការបញ្ចូលសំឡេងស្វ័យប្រវត្តិនេះ។" }
         ];
 
-        function switchMainTab(tab) {}
-
         function goToStep(stepNumber) {
             document.querySelectorAll('.step-panel').forEach(panel => panel.classList.add('hidden'));
             document.getElementById(`step-panel-${stepNumber}`).classList.remove('hidden');
 
-            document.querySelectorAll('.step-btn').forEach((btn) => {
-                btn.className = "step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0 sm:shrink";
-                const spanNum = btn.querySelector('span');
-                if(spanNum) spanNum.className = "w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-xs shrink-0";
+            document.querySelectorAll('.step-btn').forEach((btn, idx) => {
+                if (idx + 1 === stepNumber) {
+                    btn.className = "step-btn active min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition bg-red-600 text-white font-semibold shadow shrink-0";
+                } else {
+                    btn.className = "step-btn min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition hover:bg-slate-800 text-slate-400 shrink-0";
+                }
             });
-
-            const activeBtn = document.getElementById(`step-btn-${stepNumber}`);
-            if(activeBtn) {
-                activeBtn.className = "step-btn active min-w-[130px] sm:min-w-0 p-2.5 rounded-xl flex items-center justify-center gap-2 transition bg-red-600 text-white font-semibold shadow shrink-0 sm:shrink";
-                const spanNum = activeBtn.querySelector('span');
-                if(spanNum) spanNum.className = "w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-xs shrink-0";
-            }
 
             if(stepNumber === 2) renderChineseSubtitles();
             if(stepNumber === 3) renderKhmerTranslationTable();
@@ -496,74 +302,39 @@
             const file = event.target.files[0];
             if (file) {
                 selectedFile = file;
-                document.getElementById('file-name-display').innerText = `បានជ្រើសរើស៖ ${file.name} (${(file.size/(1024*1024)).toFixed(2)} MB)`;
+                document.getElementById('file-name-display').innerText = `បានជ្រើសរើស៖ ${file.name}`;
             }
-        }
-
-        function loadDemoVideo(sampleId) {
-            document.getElementById('file-name-display').innerText = `បានជ្រើសរើសវីដេអូគំរូ៖ ${sampleId === 'sample1' ? 'រឿងចិនបុរាណ (Wuxia)' : 'រឿងចិនទំនើប (Modern)'}`;
-            alert('បានផ្ទុកវីដេអូគំរូរួចរាល់!');
         }
 
         async function splitVideoOnBackend() {
-            if (!selectedFile) {
-                alert('សូមជ្រើសរើសឯកសារវីដេអូជាមុនសិន!');
-                return;
-            }
-
+            if (!selectedFile) { alert('សូមជ្រើសរើសឯកសារវីដេអូជាមុនសិន!'); return; }
             const formData = new FormData();
             formData.append("file", selectedFile);
             formData.append("chunk_duration_min", 15);
-
             try {
-                alert("កំពុងបញ្ជូនវីដេអូទៅកាន់ Python Backend... សូមរង់ចាំបន្តិច!");
-                const response = await fetch(`${BACKEND_URL}/api/split-video`, {
-                    method: 'POST',
-                    body: formData
-                });
+                alert("កំពុងបញ្ជូនវីដេអូទៅកាន់ Python Backend...");
+                const response = await fetch(`${BACKEND_URL}/api/split-video`, { method: 'POST', body: formData });
                 const data = await response.json();
-                if(response.ok) {
-                    alert(`ជោគជ័យ! វីដេអូត្រូវបានកាត់ជា ${data.total_chunks} ចំណែក។`);
-                } else {
-                    alert('មានបញ្ហា៖ ' + (data.detail || 'មិនអាចកាត់វីដេអូបានទេ'));
-                }
-            } catch(err) {
-                alert('Error ភ្ជាប់ទៅ Backend: ' + err.message);
-            }
+                if(response.ok) alert(`ជោគជ័យ! វីដេអូត្រូវបានកាត់ជា ${data.total_chunks} ចំណែក។`);
+            } catch(err) { alert('Error: ' + err.message); }
         }
 
-        function simulateWhisperExtract() {
-            const container = document.getElementById('whisper-progress-container');
-            container.classList.remove('hidden');
-            let progress = 0;
-            const bar = document.getElementById('whisper-bar');
-            const percent = document.getElementById('whisper-percent-text');
-            
-            const interval = setInterval(() => {
-                progress += 10;
-                bar.style.width = progress + '%';
-                percent.innerText = progress + '%';
-                if(progress >= 100) {
-                    clearInterval(interval);
-                    document.getElementById('whisper-status-text').innerText = "ទាញយកអត្ថបទចិនបានរួចរាល់!";
-                    renderChineseSubtitles();
-                }
-            }, 150);
+        function simulateWhisperExtract() { 
+            renderChineseSubtitles(); 
+            alert('ទាញយកអត្ថបទចិនរួចរាល់!'); 
         }
 
         function renderChineseSubtitles() {
-            const tbody = document.getElementById('chinese-subtitles-body');
-            document.getElementById('chinese-count-badge').innerText = subtitlesData.length + " ចំណុច";
-            tbody.innerHTML = subtitlesData.map((item, idx) => `
+            document.getElementById('chinese-subtitles-body').innerHTML = subtitlesData.map((item, idx) => `
                 <tr>
                     <td class="p-3">${idx + 1}</td>
-                    <td class="p-3 font-mono text-amber-400">${item.time}</td>
-                    <td class="p-3 font-medium">${item.chinese}</td>
-                    <td class="p-3 text-center"><span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[10px]">រួចរាល់</span></td>
+                    <td class="p-3 text-amber-400">${item.time}</td>
+                    <td class="p-3">${item.chinese}</td>
                 </tr>
             `).join('');
         }
 
+        // 🟢 មុខងារ Step 3: បកប្រែ និងបង្ហាញតារាងកែសម្រួលអត្ថបទខ្មែរ
         function runAutoTranslation() {
             const container = document.getElementById('translate-progress-container');
             container.classList.remove('hidden');
@@ -572,7 +343,7 @@
             const percent = document.getElementById('translate-percent-text');
 
             const interval = setInterval(() => {
-                progress += 20;
+                progress += 25;
                 bar.style.width = progress + '%';
                 percent.innerText = progress + '%';
                 if(progress >= 100) {
@@ -583,14 +354,13 @@
         }
 
         function renderKhmerTranslationTable() {
-            const tbody = document.getElementById('khmer-translation-body');
-            tbody.innerHTML = subtitlesData.map((item, idx) => `
+            document.getElementById('khmer-translation-body').innerHTML = subtitlesData.map((item, idx) => `
                 <tr>
                     <td class="p-3">${idx + 1}</td>
-                    <td class="p-3 font-mono text-amber-400">${item.time}</td>
+                    <td class="p-3 text-amber-400 font-mono">${item.time}</td>
                     <td class="p-3 text-slate-400">${item.chinese}</td>
                     <td class="p-3">
-                        <input type="text" value="${item.khmer}" onchange="subtitlesData[${idx}].khmer = this.value" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:border-blue-500">
+                        <input type="text" value="${item.khmer}" onchange="subtitlesData[${idx}].khmer = this.value" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:border-blue-500 focus:outline-none">
                     </td>
                 </tr>
             `).join('');
@@ -599,59 +369,32 @@
         async function generateKhmerAudioTTS() {
             const gender = document.getElementById('voice-select').value;
             const listContainer = document.getElementById('tts-audio-list');
-            listContainer.innerHTML = `<div class="p-4 bg-slate-950 rounded-xl text-center text-xs text-amber-400 animate-pulse">កំពុងបង្កើតសំឡេង AI ខ្មែរតាម Edge-TTS...</div>`;
-
-            let htmlContent = '';
+            listContainer.innerHTML = `<div class="p-4 text-center text-amber-400 animate-pulse">កំពុងបង្កើតសំឡេង...</div>`;
+            let html = '';
             for (let i = 0; i < subtitlesData.length; i++) {
                 const item = subtitlesData[i];
                 const formData = new FormData();
                 formData.append('text', item.khmer);
                 formData.append('gender', gender);
-
-                try {
-                    const response = await fetch(`${BACKEND_URL}/api/generate-khmer-audio`, {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        const blob = await response.blob();
-                        const audioUrl = URL.createObjectURL(blob);
-                        htmlContent += `
-                            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between gap-3">
-                                <div class="overflow-hidden">
-                                    <p class="text-[10px] font-mono text-amber-400">${item.time}</p>
-                                    <p class="text-xs text-slate-200 truncate">${item.khmer}</p>
-                                </div>
-                                <audio controls src="${audioUrl}" class="h-8 max-w-[180px]"></audio>
-                            </div>
-                        `;
-                    } else {
-                        htmlContent += `<div class="p-3 bg-red-950/40 text-red-400 text-xs rounded-xl">កំហុសក្នុងការបង្កើតសំឡេងសម្រាប់ប្រយោគទី ${i+1}</div>`;
-                    }
-                } catch (err) {
-                    htmlContent += `<div class="p-3 bg-red-950/40 text-red-400 text-xs rounded-xl">មិនអាចតភ្ជាប់ទៅ Backend ទេ។</div>`;
+                const res = await fetch(`${BACKEND_URL}/api/generate-khmer-audio`, { method: 'POST', body: formData });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    html += `<div class="p-2 bg-slate-950 rounded flex justify-between items-center"><span class="text-xs truncate max-w-[200px]">${item.khmer}</span><audio controls src="${URL.createObjectURL(blob)}" class="h-6"></audio></div>`;
                 }
             }
-            listContainer.innerHTML = htmlContent;
+            listContainer.innerHTML = html;
         }
 
-        // 🎬 មុខងារ Export វីដេអូចុងក្រោយពេញរឿង (ส่ง Text ทั้งหมดไป Merge ใน Backend)
+        // 🎬 មុខងារ Export វីដេអូចុងក្រោយពេញរឿង
         async function exportFinalMovie() {
-            if (!selectedFile) {
-                alert("សូមជ្រើសរើសឯកសារវីដេអូដើមនៅជំហានទី ១ ជាមុនសិន!");
-                goToStep(1);
-                return;
-            }
+            if (!selectedFile) { alert("សូមជ្រើសរើសវីដេអូដើមនៅជំហានទី ១ ជាមុនសិន!"); goToStep(1); return; }
 
             const player = document.getElementById('result-video-player');
             const downloadBtn = document.getElementById('download-movie-btn');
 
             alert("ប្រព័ន្ធកំពុង Gen សំឡេងខ្មែរពេញរឿង និង Merge ចូលវីដេអូតាម FFmpeg... សូមរង់ចាំបន្តិច!");
 
-            // รวมข้อความภาษาเขมรทั้งหมดเข้าด้วยกัน
             const fullText = subtitlesData.map(item => item.khmer).join(" ");
-
             const formData = new FormData();
             formData.append("video_file", selectedFile);
             formData.append("full_text", fullText);
@@ -673,7 +416,7 @@
                     downloadBtn.href = finalVideoUrl;
                     downloadBtn.download = "khmer_dubbed_movie.mp4";
 
-                    alert("ជោគជ័យ! វីដេអូបញ្ចូលសំឡេងខ្មែរពេញរឿងត្រូវបានបង្កើតរួចរាល់ អ្នកអាចចុច Play ឬ Download ได้เลย。");
+                    alert("ជោគជ័យ! វីដេអូបញ្ចូលសំឡេងខ្មែរពេញរឿងត្រូវបានបង្កើតរួចរាល់!");
                 } else {
                     alert("មានបញ្ហាក្នុងការ Merge វីដេអូពី Backend!");
                 }
