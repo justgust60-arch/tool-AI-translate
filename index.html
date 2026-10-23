@@ -66,6 +66,8 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
     <select id="voice" class="inp"><option value="female">ស្រីមុំ (Sreymom)</option><option value="male">ពិសិដ្ឋ (Piseth)</option></select>
     <label class="text-xs text-slate-400">សំឡេងចិនដើម៖ <b id="ov">15%</b></label>
     <input id="orig" type="range" min="0" max="100" value="15" class="w-full" oninput="$('ov').textContent=this.value+'%'">
+    <label class="text-xs text-slate-400">ល្បឿនអានសំឡេងខ្មែរ៖ <b id="sv">+15%</b></label>
+    <input id="speed" type="range" min="0" max="50" value="15" class="w-full" oninput="$('sv').textContent='+'+this.value+'%'">
     <button class="btn" onclick="prev()">សាកល្បងសំឡេង (3 ឃ្លាដំបូង)</button>
     <div id="pv" class="space-y-2"></div>
   </section>
@@ -188,7 +190,7 @@ async function prev(){
   const lines=subs.filter(s=>s.khmer).slice(0,3).map(s=>s.khmer); if(!lines.length)lines.push("សួស្តី នេះគឺជាសំឡេងសាកល្បង");
   $("pv").innerHTML=""; 
   for(const t of lines){
-    const f=new FormData(); f.append("text",t); f.append("gender",$("voice").value);
+    const f=new FormData(); f.append("text",t); f.append("gender",$("voice").value); f.append("speech_rate",$("speed").value);
     const r=await api("/api/tts-preview",{method:"POST",body:f});
     if(!r.ok){alert("មានបញ្ហាបង្កើតសំឡេង");return}
     const d=document.createElement("div"); d.className="p-2 bg-slate-950 rounded flex justify-between items-center gap-2";
@@ -201,7 +203,7 @@ async function dub(){
   if(!need())return; if(!video||!subs.some(s=>s.khmer))return alert("ត្រូវការវីដេអូ និងអក្សរខ្មែរជាមុន");
   const f=new FormData(); f.append("video",video);
   f.append("subs_json",JSON.stringify(subs.map(({start,end,khmer})=>({start,end,khmer}))));
-  f.append("gender",$("voice").value); f.append("original_volume",$("orig").value/100);
+  f.append("gender",$("voice").value); f.append("original_volume",$("orig").value/100); f.append("speech_rate",$("speed").value);
   try{
     const r=await runJob("/api/dub",f,5), url=base()+"/api/download/"+r.file;
     $("rv").src=url; $("rv").classList.remove("hidden"); $("dl").href=url; $("dl").classList.remove("hidden");
