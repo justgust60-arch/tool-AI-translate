@@ -334,7 +334,6 @@
             `).join('');
         }
 
-        // 🟢 មុខងារ Step 3: បកប្រែ និងបង្ហាញតារាងកែសម្រួលអត្ថបទខ្មែរ
         function runAutoTranslation() {
             const container = document.getElementById('translate-progress-container');
             container.classList.remove('hidden');
@@ -385,19 +384,20 @@
             listContainer.innerHTML = html;
         }
 
-        // 🎬 មុខងារ Export វីដេអូចុងក្រោយពេញរឿង
+        // 🎬 មុខងារ Export វីដេអូចុងក្រោយ (បានកែសម្រួលឱ្យផ្ញើ Timecode និង Subtitles JSON ទៅ Backend)
         async function exportFinalMovie() {
             if (!selectedFile) { alert("សូមជ្រើសរើសវីដេអូដើមនៅជំហានទី ១ ជាមុនសិន!"); goToStep(1); return; }
 
             const player = document.getElementById('result-video-player');
             const downloadBtn = document.getElementById('download-movie-btn');
+            const gender = document.getElementById('voice-select').value;
 
-            alert("ប្រព័ន្ធកំពុង Gen សំឡេងខ្មែរពេញរឿង និង Merge ចូលវីដេអូតាម FFmpeg... សូមរង់ចាំបន្តិច!");
+            alert("ប្រព័ន្ធកំពុងរៀបចំសំឡេងខ្មែរឱ្យដើរតាមសាច់រឿង និង Merge ចូលវីដេអូ... សូមរង់ចាំបន្តិច!");
 
-            const fullText = subtitlesData.map(item => item.khmer).join(" ");
             const formData = new FormData();
             formData.append("video_file", selectedFile);
-            formData.append("full_text", fullText);
+            formData.append("subtitles_json", JSON.stringify(subtitlesData));
+            formData.append("gender", gender);
 
             try {
                 const response = await fetch(`${BACKEND_URL}/api/merge-video-full`, {
@@ -416,7 +416,7 @@
                     downloadBtn.href = finalVideoUrl;
                     downloadBtn.download = "khmer_dubbed_movie.mp4";
 
-                    alert("ជោគជ័យ! វីដេអូបញ្ចូលសំឡេងខ្មែរពេញរឿងត្រូវបានបង្កើតរួចរាល់!");
+                    alert("ជោគជ័យ! វីដេអូបញ្ចូលសំឡេងខ្មែរតាមសាច់រឿងត្រូវបានបង្កើតរួចរាល់!");
                 } else {
                     alert("មានបញ្ហាក្នុងការ Merge វីដេអូពី Backend!");
                 }
