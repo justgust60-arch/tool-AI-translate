@@ -43,7 +43,7 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
 
   <!-- 2 -->
   <section class="panel card hidden" id="s2">
-    <div class="flex justify-between items-center"><h2 class="font-bold text-sm">២. ទាញអត្ថបទចិន (Whisper ពិត)</h2><button class="btn" onclick="stt()">ចាប់ផ្តើម</button></div>
+    <div class="flex justify-between items-center"><h2 class="font-bold text-sm">២. ទាញអត្ថបទចិន (Whisper ពិត)</h2><div class="flex gap-2"><button class="btn2" onclick="exportZh()">ទាញយក .srt ចិន</button><button class="btn" onclick="stt()">ចាប់ផ្តើម</button></div></div>
     <div id="p2" class="hidden space-y-1"><div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div id="b2" class="h-full bg-amber-500 w-0"></div></div><div id="m2" class="text-xs text-slate-400"></div></div>
     <div class="tbl"><table class="w-full text-xs"><tbody id="zb"><tr><td class="p-4 text-center text-slate-500">មិនទាន់មានអត្ថបទ</td></tr></tbody></table></div>
   </section>
@@ -158,7 +158,7 @@ async function tr(){
   try{const r=await runJob("/api/translate",f,3); idx.forEach((i,k)=>subs[i].khmer=r[k]); renderKm()}catch(e){alert("កំហុស៖ "+e.message)}
 }
 function renderKm(){
-  $("kb").innerHTML=subs.length?subs.map((s,i)=>`<tr><td class="p-2">${i+1}</td><td class="p-2 text-amber-400 font-mono whitespace-nowrap">${s.time}</td><td class="p-2 text-slate-400 w-4/12">${esc(s.chinese)}</td><td class="p-2"><input class="inp" data-i="${i}" value="${esc(s.khmer)}"></td></tr>`).join(""):'<tr><td class="p-4 text-center text-slate-500">ធ្វើជំហានទី ២ ឬនាំចូល .srt</td></tr>';
+  $("kb").innerHTML=subs.length?subs.map((s,i)=>`<tr><td class="p-2 space-y-1"><div class="text-xs"><span class="text-slate-500">${i+1}</span> <span class="text-amber-400 font-mono">${s.time}</span></div><div class="text-slate-400">${esc(s.chinese)}</div><input class="inp" data-i="${i}" value="${esc(s.khmer)}"></td></tr>`).join(""):'<tr><td class="p-4 text-center text-slate-500">ធ្វើជំហានទី ២ ឬនាំចូល .srt</td></tr>';
 }
 $("kb").oninput=e=>{const i=e.target.dataset.i; if(i!==undefined)subs[i].khmer=e.target.value};
 
@@ -179,11 +179,12 @@ function importSrt(file){
   };
   r.readAsText(file,"utf-8");
 }
-function exportSrt(){
-  const t=subs.filter(s=>s.khmer).map((s,i)=>`${i+1}\n${clock(s.start)} --> ${clock(s.end)}\n${s.khmer}\n`).join("\n");
-  if(!t)return alert("មិនទាន់មានអក្សរខ្មែរ");
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([t],{type:"text/plain"})); a.download="movie.km.srt"; a.click();
+function saveSrt(field,name){
+  const t=subs.filter(s=>s[field]).map((s,i)=>`${i+1}\n${clock(s.start)} --> ${clock(s.end)}\n${s[field]}\n`).join("\n");
+  if(!t)return alert("មិនទាន់មានអក្សរ");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([t],{type:"text/plain"})); a.download=name; a.click();
 }
+const exportSrt=()=>saveSrt("khmer","movie.km.srt"), exportZh=()=>saveSrt("chinese","movie.zh.srt");
 
 async function prev(){
   if(!need())return;
