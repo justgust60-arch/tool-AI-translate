@@ -85,7 +85,9 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
 const $=id=>document.getElementById(id), sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let video=null, subs=[];
-try{$("backend").value=localStorage.getItem("be")||""}catch(e){}
+const DEFAULT_BACKEND="https://ladder-tackle-perplexed.ngrok-free.dev";
+$("backend").value=DEFAULT_BACKEND;
+try{$("backend").value=localStorage.getItem("be")||DEFAULT_BACKEND}catch(e){}
 $("backend").onchange=()=>{try{localStorage.setItem("be",$("backend").value.trim())}catch(e){}};
 const base=()=>$("backend").value.trim().replace(/\/$/,"");
 const api=(p,o={})=>{o.headers={"ngrok-skip-browser-warning":"true",...(o.headers||{})};return fetch(base()+p,o)};
