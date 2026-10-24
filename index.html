@@ -111,13 +111,37 @@ go(1);
 function setP(n,p,m){$("p"+n).classList.remove("hidden");$("b"+n).style.width=p+"%";$("m"+n).textContent=m||""}
 const need=()=>{if(!base()){alert("សូមដាក់ Backend URL ជាមុន");return false}return true};
 
-function upload(file){return new Promise((res,rej)=>{
-  const x=new XMLHttpRequest(); x.open("POST",base()+"/api/upload");
-  x.upload.onprogress=e=>setP(1,e.loaded/e.total*100,"កំពុង upload "+Math.round(e.loaded/e.total*100)+"%");
-  x.onload=()=>x.status<300?res(JSON.parse(x.responseText)):rej(new Error(x.responseText));
-  x.onerror=()=>rej(new Error("មិនអាចភ្ជាប់ Backend"));
-  const f=new FormData(); f.append("file",file); x.send(f);
+const CHUNK=40*1024*1024;
+function sendChunk(blob,id,i,onProg){return new Promise((res,rej)=>{
+  const x=new XMLHttpRequest(); x.open("POST",base()+"/api/upload_chunk");
+  x.upload.onprogress=e=>onProg(e.loaded);
+  x.onload=()=>x.status<300?res():rej(new Error("HTTP "+x.status));
+  x.onerror=()=>rej(new Error("network"));
+  x.ontimeout=()=>rej(new Error("timeout"));
+  const f=new FormData(); f.append("file",blob,"chunk"); f.append("upload_id",id); f.append("index",i); x.send(f);
 });}
+async function upload(file){
+  const total=Math.max(1,Math.ceil(file.size/CHUNK));
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const ext=(file.name.match(/\.[a-zA-Z0-9]{1,5}$/)||[".mp4"])[0];
+  for(let i=0;i<total;i++){
+    const blob=file.slice(i*CHUNK,Math.min(file.size,(i+1)*CHUNK));
+    for(let t=0;;t++){
+      try{
+        await sendChunk(blob,id,i,l=>{const done=i*CHUNK+l;setP(1,done/file.size*100,`កំពុង upload ${Math.round(done/file.size*100)}% (${i+1}/${total}) — កុំចាក់សោអេក្រង់`)});
+        break;
+      }catch(e){
+        if(t>=5)throw new Error("Upload បរាជ័យនៅបំណែកទី "+(i+1)+": "+e.message);
+        setP(1,i/total*100,`ព្យាយាមម្តងទៀត បំណែកទី ${i+1} (${t+1}/5)...`); await sleep(2000*(t+1));
+      }
+    }
+  }
+  setP(1,99,"កំពុងផ្សំបំណែក...");
+  const f=new FormData(); f.append("upload_id",id); f.append("total",total); f.append("ext",ext);
+  const r=await api("/api/upload_done",{method:"POST",body:f});
+  if(!r.ok)throw new Error(await r.text());
+  return r.json();
+}
 
 async function runJob(path,form,n){
   const r=await api(path,{method:"POST",body:form});
