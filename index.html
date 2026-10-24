@@ -26,7 +26,7 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
 <main class="max-w-6xl mx-auto px-3 sm:px-6 py-5 space-y-4">
   <div class="card">
     <label class="text-xs text-slate-400">Backend URL (ចម្លងពី Colab ក្រោយដំណើរការ Cell 2)</label>
-    <input id="backend" class="inp" placeholder="https://xxxx.ngrok-free.dev">
+    <input id="backend" class="inp" placeholder="https://xxxx.trycloudflare.com">
   </div>
 
   <nav id="nav" class="flex overflow-x-auto gap-2 p-2 bg-slate-900 rounded-2xl border border-slate-800 text-xs"></nav>
@@ -53,7 +53,7 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
     <div class="flex flex-wrap gap-2 justify-between items-center"><h2 class="font-bold text-sm">៣. បកប្រែជាខ្មែរ និងកែសម្រួល</h2>
       <div class="flex flex-wrap gap-2">
         <button class="btn" onclick="tr()">បកប្រែស្វ័យប្រវត្តិ</button>
-        <label class="btn2 cursor-pointer">នាំចូល .srt<input type="file" accept=".srt,.txt" class="hidden" onchange="importSrt(this.files[0])"></label>
+        <label class="btn2 cursor-pointer">នាំចូល .srt<input type="file" class="hidden" onchange="importSrt(this.files[0]);this.value=''"></label>
         <button class="btn2" onclick="exportSrt()">ទាញយក .srt ខ្មែរ</button>
       </div></div>
     <div id="p3" class="hidden space-y-1"><div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div id="b3" class="h-full bg-blue-500 w-0"></div></div><div id="m3" class="text-xs text-slate-400"></div></div>
@@ -66,6 +66,8 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
     <select id="voice" class="inp"><option value="female">ស្រីមុំ (Sreymom)</option><option value="male">ពិសិដ្ឋ (Piseth)</option></select>
     <label class="text-xs text-slate-400">សំឡេងចិនដើម៖ <b id="ov">15%</b></label>
     <input id="orig" type="range" min="0" max="100" value="15" class="w-full" oninput="$('ov').textContent=this.value+'%'">
+    <label class="text-xs text-slate-400">សំឡេងខ្មែរ៖ <b id="kv">300%</b></label>
+    <input id="kvol" type="range" min="100" max="600" step="50" value="300" class="w-full" oninput="$('kv').textContent=this.value+'%'">
     <label class="text-xs text-slate-400">ល្បឿនអានសំឡេងខ្មែរ៖ <b id="sv">+15%</b></label>
     <input id="speed" type="range" min="0" max="50" value="15" class="w-full" oninput="$('sv').textContent='+'+this.value+'%'">
     <button class="btn" onclick="prev()">សាកល្បងសំឡេង (3 ឃ្លាដំបូង)</button>
@@ -77,9 +79,9 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
     <h2 class="font-bold text-sm">៥. បញ្ចូលសំឡេងខ្មែរពេញរឿង</h2>
     <button class="btn" onclick="dub()">បង្កើតវីដេអូចុងក្រោយ</button>
     <div id="p5" class="hidden space-y-1 text-left"><div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div id="b5" class="h-full bg-red-500 w-0"></div></div><div id="m5" class="text-xs text-slate-400"></div></div>
-    <video id="rv" controls class="w-full rounded-xl bg-black hidden"></video>
+    <video id="rv" controls playsinline class="w-full rounded-xl bg-black hidden"></video>
     <a id="dl" class="hidden btn3 inline-block" target="_blank" rel="noopener">⬇️ ទាញយកវីដេអូ</a>
-    <p class="text-xs text-slate-500">បើ ngrok បង្ហាញទំព័រព្រមាន សូមចុច «Visit Site» ម្ដង រួចទាញយកម្ដងទៀត។</p>
+    <p class="text-xs text-slate-500">បើវីដេអូមិនចាក់ក្នុងទំព័រ សូមចុចប៊ូតុងទាញយកដោយផ្ទាល់។</p>
   </section>
 </main>
 
@@ -87,12 +89,11 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
 const $=id=>document.getElementById(id), sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let video=null, subs=[];
-const DEFAULT_BACKEND="https://ladder-tackle-perplexed.ngrok-free.dev";
-$("backend").value=DEFAULT_BACKEND;
-try{$("backend").value=localStorage.getItem("be")||DEFAULT_BACKEND}catch(e){}
+$("backend").value="";
+try{$("backend").value=localStorage.getItem("be")||""}catch(e){}
 $("backend").onchange=()=>{try{localStorage.setItem("be",$("backend").value.trim())}catch(e){}};
 const base=()=>$("backend").value.trim().replace(/\/$/,"");
-const api=(p,o={})=>{o.headers={"ngrok-skip-browser-warning":"true",...(o.headers||{})};return fetch(base()+p,o)};
+const api=(p,o={})=>fetch(base()+p,o);
 const clock=s=>new Date(s*1000).toISOString().substr(11,12).replace(".",",");
 const sec=t=>{const m=t.match(/(\d+):(\d+):(\d+)[,.](\d+)/);return m?Number(m[1])*3600+Number(m[2])*60+Number(m[3])+Number("0."+m[4]):0};
 
@@ -112,7 +113,6 @@ const need=()=>{if(!base()){alert("សូមដាក់ Backend URL ជាម�
 
 function upload(file){return new Promise((res,rej)=>{
   const x=new XMLHttpRequest(); x.open("POST",base()+"/api/upload");
-  x.setRequestHeader("ngrok-skip-browser-warning","true");
   x.upload.onprogress=e=>setP(1,e.loaded/e.total*100,"កំពុង upload "+Math.round(e.loaded/e.total*100)+"%");
   x.onload=()=>x.status<300?res(JSON.parse(x.responseText)):rej(new Error(x.responseText));
   x.onerror=()=>rej(new Error("មិនអាចភ្ជាប់ Backend"));
@@ -176,6 +176,7 @@ function importSrt(file){
     if(subs.length===cues.length){cues.forEach((c,i)=>{if(km)subs[i].khmer=c.t; else subs[i].chinese=c.t})}
     else subs=cues.map((c,i)=>({id:i+1,start:c.start,end:c.end,time:clock(c.start)+" - "+clock(c.end),chinese:km?"":c.t,khmer:km?c.t:""}));
     renderKm();
+    alert("នាំចូលបាន "+cues.length+" ឃ្លា");
   };
   r.readAsText(file,"utf-8");
 }
@@ -189,7 +190,7 @@ const exportSrt=()=>saveSrt("khmer","movie.km.srt"), exportZh=()=>saveSrt("chine
 async function prev(){
   if(!need())return;
   const lines=subs.filter(s=>s.khmer).slice(0,3).map(s=>s.khmer); if(!lines.length)lines.push("សួស្តី នេះគឺជាសំឡេងសាកល្បង");
-  $("pv").innerHTML=""; 
+  $("pv").innerHTML="";
   for(const t of lines){
     const f=new FormData(); f.append("text",t); f.append("gender",$("voice").value); f.append("speech_rate",$("speed").value);
     const r=await api("/api/tts-preview",{method:"POST",body:f});
@@ -204,7 +205,8 @@ async function dub(){
   if(!need())return; if(!video||!subs.some(s=>s.khmer))return alert("ត្រូវការវីដេអូ និងអក្សរខ្មែរជាមុន");
   const f=new FormData(); f.append("video",video);
   f.append("subs_json",JSON.stringify(subs.map(({start,end,khmer})=>({start,end,khmer}))));
-  f.append("gender",$("voice").value); f.append("original_volume",$("orig").value/100); f.append("speech_rate",$("speed").value);
+  f.append("gender",$("voice").value); f.append("original_volume",$("orig").value/100);
+  f.append("khmer_volume",$("kvol").value/100); f.append("speech_rate",$("speed").value);
   try{
     const r=await runJob("/api/dub",f,5), url=base()+"/api/download/"+r.file;
     $("rv").src=url; $("rv").classList.remove("hidden"); $("dl").href=url; $("dl").classList.remove("hidden");
