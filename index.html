@@ -20,7 +20,7 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
 </head>
 <body class="min-h-screen">
 <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 px-4 py-3">
-  <h1 class="text-lg font-bold bg-gradient-to-r from-red-400 via-amber-300 to-yellow-400 bg-clip-text text-transparent">🎬 រឿងភាគចិន → ខ្មែរ AI Dubbing</h1>
+  <h1 class="text-lg font-bold bg-gradient-to-r from-red-400 via-amber-300 to-yellow-400 bg-clip-text text-transparent">🎬 រឿងភាគចិន/អង់គ្លេស → ខ្មែរ AI Dubbing</h1>
 </header>
 
 <main class="max-w-6xl mx-auto px-3 sm:px-6 py-5 space-y-4">
@@ -43,7 +43,16 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
 
   <!-- 2 -->
   <section class="panel card hidden" id="s2">
-    <div class="flex justify-between items-center"><h2 class="font-bold text-sm">២. ទាញអត្ថបទចិន (Whisper ពិត)</h2><div class="flex gap-2"><button class="btn2" onclick="exportZh()">ទាញយក .srt ចិន</button><button class="btn" onclick="stt()">ចាប់ផ្តើម</button></div></div>
+    <div class="flex flex-wrap gap-2 justify-between items-center"><h2 class="font-bold text-sm">២. ទាញអត្ថបទ (Whisper ពិត)</h2>
+      <div class="flex flex-wrap gap-2 items-center">
+        <select id="lang" class="inp" style="width:auto">
+          <option value="auto">ភាសាដើម៖ ស្វ័យប្រវត្តិ</option>
+          <option value="zh">ចិន</option>
+          <option value="en">អង់គ្លេស</option>
+        </select>
+        <button class="btn2" onclick="exportZh()">ទាញយក .srt ដើម</button>
+        <button class="btn" onclick="stt()">ចាប់ផ្តើម</button>
+      </div></div>
     <div id="p2" class="hidden space-y-1"><div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div id="b2" class="h-full bg-amber-500 w-0"></div></div><div id="m2" class="text-xs text-slate-400"></div></div>
     <div class="tbl"><table class="w-full text-xs"><tbody id="zb"><tr><td class="p-4 text-center text-slate-500">មិនទាន់មានអត្ថបទ</td></tr></tbody></table></div>
   </section>
@@ -68,7 +77,7 @@ body{font-family:'Kantumruuy Pro','Noto Sans Khmer',sans-serif;background:#02061
     <button class="btn2" onclick="detect()">🔍 រកសំឡេងប្រុស/ស្រី ស្វ័យប្រវត្តិ (ពីសំឡេងដើម)</button>
     <div id="p4" class="hidden space-y-1"><div class="h-2 bg-slate-800 rounded-full overflow-hidden"><div id="b4" class="h-full bg-blue-500 w-0"></div></div><div id="m4" class="text-xs text-slate-400"></div></div>
     <div id="gc" class="text-xs text-slate-400">ក្នុងជំហាន ៣ អ្នកអាចកែប្រុស/ស្រី ម្តងមួយបន្ទាត់បាន។</div>
-    <label class="text-xs text-slate-400">សំឡេងចិនដើម៖ <b id="ov">15%</b></label>
+    <label class="text-xs text-slate-400">សំឡេងដើម៖ <b id="ov">15%</b></label>
     <input id="orig" type="range" min="0" max="100" value="15" class="w-full" oninput="$('ov').textContent=this.value+'%'">
     <label class="text-xs text-slate-400">សំឡេងខ្មែរ៖ <b id="kv">300%</b></label>
     <input id="kvol" type="range" min="100" max="600" step="50" value="300" class="w-full" oninput="$('kv').textContent=this.value+'%'">
@@ -102,7 +111,7 @@ const clock=s=>new Date(s*1000).toISOString().substr(11,12).replace(".",",");
 const sec=t=>{const m=t.match(/(\d+):(\d+):(\d+)[,.](\d+)/);return m?Number(m[1])*3600+Number(m[2])*60+Number(m[3])+Number("0."+m[4]):0};
 
 // navigation
-const titles=["១ វីដេអូ","២ អត្ថបទចិន","៣ បកប្រែ","៤ សំឡេង","៥ ផលសម្រេច"];
+const titles=["១ វីដេអូ","២ អត្ថបទដើម","៣ បកប្រែ","៤ សំឡេង","៥ ផលសម្រេច"];
 $("nav").innerHTML=titles.map((t,i)=>`<button id="n${i+1}" onclick="go(${i+1})" class="px-4 py-2 rounded-xl whitespace-nowrap"> ${t}</button>`).join("");
 function go(n){
   document.querySelectorAll(".panel").forEach(p=>p.classList.add("hidden"));
@@ -171,8 +180,8 @@ async function useVideo(){
 
 async function stt(){
   if(!need())return; if(!video)return alert("ធ្វើជំហានទី ១ ជាមុន");
-  const f=new FormData(); f.append("video",video); f.append("language","zh");
-  try{subs=await runJob("/api/transcribe",f,2); renderZh(); alert("បានអត្ថបទចិន "+subs.length+" ឃ្លា")}catch(e){alert("កំហុស៖ "+e.message)}
+  const f=new FormData(); f.append("video",video); f.append("language",$("lang").value);
+  try{subs=await runJob("/api/transcribe",f,2); renderZh(); alert("បានអត្ថបទ "+subs.length+" ឃ្លា")}catch(e){alert("កំហុស៖ "+e.message)}
 }
 function renderZh(){
   $("zb").innerHTML=subs.length?subs.map((s,i)=>`<tr><td class="p-2">${i+1}</td><td class="p-2 text-amber-400 font-mono">${s.time}</td><td class="p-2 whitespace-nowrap">${s.gender==="male"?"🔵 ប្រុស":s.gender==="female"?"🔴 ស្រី":"—"}</td><td class="p-2">${esc(s.chinese)}</td></tr>`).join(""):'<tr><td class="p-4 text-center text-slate-500">មិនទាន់មានអត្ថបទ</td></tr>';
@@ -181,7 +190,7 @@ function renderZh(){
 async function tr(){
   if(!need())return;
   const idx=subs.map((s,i)=>i).filter(i=>subs[i].chinese);
-  if(!idx.length)return alert("គ្មានអត្ថបទចិនសម្រាប់បកប្រែ");
+  if(!idx.length)return alert("គ្មានអត្ថបទសម្រាប់បកប្រែ");
   const f=new FormData(); f.append("texts_json",JSON.stringify(idx.map(i=>subs[i].chinese)));
   try{const r=await runJob("/api/translate",f,3); idx.forEach((i,k)=>subs[i].khmer=r[k]); renderKm()}catch(e){alert("កំហុស៖ "+e.message)}
 }
@@ -223,7 +232,7 @@ function saveSrt(field,name){
   if(!t)return alert("មិនទាន់មានអក្សរ");
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([t],{type:"text/plain"})); a.download=name; a.click();
 }
-const exportSrt=()=>saveSrt("khmer","movie.km.srt"), exportZh=()=>saveSrt("chinese","movie.zh.srt");
+const exportSrt=()=>saveSrt("khmer","movie.km.srt"), exportZh=()=>saveSrt("chinese","movie.src.srt");
 
 async function prev(){
   if(!need())return;
