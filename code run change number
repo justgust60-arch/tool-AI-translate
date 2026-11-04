@@ -1,0 +1,24 @@
+function fixNumbers() {
+  var doc = DocumentApp.getActiveDocument();
+  var body = doc.getBody();
+  var n = body.getNumChildren();
+  for (var i = 0; i < n; i++) {
+    var child = body.getChild(i);
+    if (child.getType() == DocumentApp.ElementType.PARAGRAPH) {
+      var t = child.asParagraph().editAsText();
+      var s = t.getText();
+      var r = s.replace(/[\u17E0-\u17E9]/g, function (c) {
+        return String(c.charCodeAt(0) - 0x17E0);
+      });
+      if (r !== s) {
+        t.setText(r);
+      }
+    }
+    if (i % 200 == 199) {
+      doc.saveAndClose();
+      doc = DocumentApp.getActiveDocument();
+      body = doc.getBody();
+    }
+  }
+  doc.saveAndClose();
+}
