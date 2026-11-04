@@ -1,0 +1,381 @@
+###cell 1  ###
+
+!pip -q install -U av fastapi uvicorn python-multipart edge-tts faster-whisper deep-translator
+!apt-get -qq install -y ffmpeg
+
+ ###cell 2 ###
+
+# ===== COLAB CELL 2: paste this whole file into one Colab cell and run it =====
+# (Cell 1 must be run first: see the install line in the instructions)
+import os, re, json, wave, uuid, asyncio, shutil, subprocess, threading, time, urllib.request
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+import uvicorn, edge_tts
+import numpy as np
+
+ROOT = "/content"
+WORK = f"{ROOT}/work"
+os.makedirs(WORK, exist_ok=True)
+RATE = 24000
+VOICES = {"male": "km-KH-PisethNeural", "female": "km-KH-SreymomNeural"}
+
+app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+jobs = {}
+
+
+# ---------- job helpers (long tasks run in background, the web page polls) ----------
+def run_job(fn, *args):
+    jid = uuid.uuid4().hex[:10]
+    jobs[jid] = {"status": "running", "progress": 0, "message": "", "result": None}
+
+    def work():
+        try:
+            jobs[jid]["result"] = fn(jid, *args)
+            jobs[jid].update(status="done", progress=100)
+        except Exception as e:
+            jobs[jid].update(status="error", message=str(e))
+
+    threading.Thread(target=work, daemon=True).start()
+    return {"job_id": jid}
+
+
+def prog(jid, p, msg=""):
+    jobs[jid]["progress"] = round(p, 1)
+    jobs[jid]["message"] = msg
+
+
+def resolve(name):
+    p = os.path.realpath(os.path.join(ROOT, name.strip().lstrip("/")))
+    if not p.startswith(ROOT + "/") or not os.path.isfile(p):
+        raise HTTPException(404, "Video file not found in Colab: " + name)
+    return p
+
+
+def fmt(t):
+    ms = int(round(t * 1000))
+    h, ms = divmod(ms, 3600000)
+    m, ms = divmod(ms, 60000)
+    s, ms = divmod(ms, 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+@app.get("/api/job/{jid}")
+def job(jid: str):
+    if jid not in jobs:
+        raise HTTPException(404, "job not found")
+    return jobs[jid]
+
+
+@app.get("/api/health")
+def health():
+    return {"ok": True}
+
+
+# ---------- 1. upload ----------
+@app.post("/api/upload")
+async def upload(file: UploadFile = File(...)):
+    ext = os.path.splitext(file.filename or "")[1] or ".mp4"
+    name = f"work/up_{uuid.uuid4().hex[:8]}{ext}"
+    with open(f"{ROOT}/{name}", "wb") as o:
+        while True:
+            chunk = await file.read(8 * 1024 * 1024)
+            if not chunk:
+                break
+            o.write(chunk)
+    return {"video": name}
+
+
+# ---------- 2. real speech-to-text (Whisper) ----------
+_model = None  # (model, "cuda" or "cpu")
+
+
+def prepare_cuda():
+    """Pre-load the CUDA 12 libraries installed by pip (Colab's own CUDA can be a newer version)."""
+    import ctypes, glob, site
+    roots = list(site.getsitepackages()) + [site.getusersitepackages()]
+    for sub in ("cuda_runtime", "cublas", "cudnn"):
+        for r in roots:
+            for f in sorted(glob.glob(f"{r}/nvidia/{sub}/lib/*.so*")):
+                try:
+                    ctypes.CDLL(f, mode=ctypes.RTLD_GLOBAL)
+                except OSError:
+                    pass
+
+
+def get_model(cpu=False):
+    global _model
+    if _model is None or (cpu and _model[1] != "cpu"):
+        prepare_cuda()
+        from faster_whisper import WhisperModel
+        gpu = False
+        if not cpu:
+            try:
+                import torch
+                gpu = torch.cuda.is_available()
+            except Exception:
+                gpu = False
+        if gpu:
+            _model = (WhisperModel("large-v3", device="cuda", compute_type="float16"), "cuda")
+        else:
+            _model = (WhisperModel("small", device="cpu", compute_type="int8"), "cpu")
+    return _model[0]
+
+
+def load_audio(path):
+    out = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
+        capture_output=True, check=True).stdout
+    return np.frombuffer(out, dtype=np.float32)
+
+
+def run_whisper(jid, model, audio, lang):
+    segs, info = model.transcribe(audio, language=(None if lang in ("", "auto") else lang), vad_filter=True)
+    total = max(info.duration, 1)
+    out = []
+    for s in segs:
+        t = s.text.strip()
+        if not t:
+            continue
+        out.append({"id": len(out) + 1, "start": round(s.start, 3), "end": round(s.end, 3),
+                    "time": f"{fmt(s.start)} - {fmt(s.end)}", "chinese": t, "khmer": ""})
+        prog(jid, min(99, s.end / total * 100), f"{len(out)} lines")
+    return out
+
+
+def do_transcribe(jid, path, lang):
+    prog(jid, 1, "Loading Whisper...")
+    audio = load_audio(path)
+    try:
+        return run_whisper(jid, get_model(), audio, lang)
+    except Exception as e:
+        if not re.search(r"cublas|cudnn|libcu|cuda", str(e), re.I):
+            raise
+        prog(jid, 1, "GPU library problem -> using CPU (slower)")
+        return run_whisper(jid, get_model(cpu=True), audio, lang)
+
+
+@app.post("/api/transcribe")
+async def transcribe(video: str = Form(...), language: str = Form("zh")):
+    return run_job(do_transcribe, resolve(video), language)
+
+
+# ---------- 3. real translation Chinese -> Khmer ----------
+def do_translate(jid, texts):
+    import time
+    from deep_translator import GoogleTranslator
+    tr = GoogleTranslator(source="zh-CN", target="km")
+    out = []
+    fails = 0
+    for i, t in enumerate(texts):
+        t = t.replace("\n", " ")
+        res = None
+        for k in range(3):
+            try:
+                res = tr.translate(t)
+                break
+            except Exception:
+                time.sleep(1.5 * (k + 1))
+        if not res:
+            fails += 1
+            res = ""
+        out.append(res)
+        time.sleep(0.25)
+        prog(jid, len(out) / len(texts) * 100, f"{len(out)}/{len(texts)} (fails {fails})")
+        if (fails >= 5 and fails == len(out)) or (fails >= 15 and fails > len(out) * 0.5):
+            raise RuntimeError("Google Translate is blocking this IP. Wait a while or change runtime.")
+    return out
+
+
+@app.post("/api/translate")
+async def translate(texts_json: str = Form(...)):
+    return run_job(do_translate, json.loads(texts_json))
+
+
+# ---------- 4. voice preview ----------
+@app.post("/api/tts-preview")
+async def tts_preview(text: str = Form(...), gender: str = Form("female"), speech_rate: int = Form(15)):
+    p = f"{WORK}/prev_{uuid.uuid4().hex[:6]}.mp3"
+    r = max(-20, min(60, speech_rate))
+    await edge_tts.Communicate(text, VOICES.get(gender, VOICES["female"]), rate=f"{r:+d}%").save(p)
+    return FileResponse(p, media_type="audio/mpeg")
+
+
+# ---------- 5. full dubbing, synced to EVERY subtitle ----------
+def ff(*args):
+    subprocess.run(["ffmpeg", "-y", "-v", "error", *args], check=True)
+
+
+def decode(src, dst, tempo=1.0):
+    a = ["-i", src, "-ac", "1", "-ar", str(RATE)]
+    if tempo > 1.01:
+        a += ["-filter:a", f"atempo={tempo:.3f}"]
+    ff(*a, "-sample_fmt", "s16", dst)
+
+
+def pcm(p):
+    with wave.open(p, "rb") as w:
+        return w.readframes(w.getnframes())
+
+
+async def synth(items, voice, d, jid, rate):
+    sem, n = asyncio.Semaphore(6), 0
+
+    async def one(i, text):
+        nonlocal n
+        f = f"{d}/c{i:05d}.mp3"
+        async with sem:
+            for k in range(4):
+                if os.path.exists(f) and os.path.getsize(f) > 0:
+                    break
+                try:
+                    await edge_tts.Communicate(text, voice, rate=f"{rate:+d}%").save(f)
+                except Exception:
+                    if os.path.exists(f):
+                        os.remove(f)
+                    await asyncio.sleep(1.5 * (k + 1))
+        n += 1
+        prog(jid, n / len(items) * 50, f"Voice {n}/{len(items)}")
+
+    await asyncio.gather(*(one(i, it["text"]) for i, it in enumerate(items)))
+
+
+def do_dub(jid, path, subs, gender, orig, rate):
+    items = sorted(
+        [{"start": float(s["start"]), "end": float(s["end"]),
+          "text": re.sub(r"\s+", " ", s.get("khmer", "")).strip()}
+         for s in subs if s.get("khmer", "").strip()],
+        key=lambda x: x["start"])
+    if not items:
+        raise ValueError("No Khmer text to dub")
+    d = f"{WORK}/dub_{jid}"
+    os.makedirs(d, exist_ok=True)
+    asyncio.run(synth(items, VOICES.get(gender, VOICES["female"]), d, jid, rate))
+
+    # Every clip is placed at its EXACT start time (no drift). A clip that is too long
+    # is sped up (max 2x); if it still does not fit it may slightly overlap the next one.
+    tmp = f"{d}/t.wav"
+    track = np.zeros(int((items[-1]["end"] + 15) * RATE), dtype=np.int32)
+    for i, it in enumerate(items):
+        mp3 = f"{d}/c{i:05d}.mp3"
+        if not os.path.exists(mp3) or os.path.getsize(mp3) == 0:
+            continue
+        st = int(it["start"] * RATE)
+        nxt = items[i + 1]["start"] if i + 1 < len(items) else it["end"] + 3
+        slot = max(0.6, nxt - it["start"] + 0.3)
+        decode(mp3, tmp)
+        b = np.frombuffer(pcm(tmp), dtype=np.int16)
+        dur = len(b) / RATE
+        if dur > slot:
+            decode(mp3, tmp, min(2.0, dur / slot))
+            b = np.frombuffer(pcm(tmp), dtype=np.int16)
+        if st + len(b) > len(track):
+            track = np.pad(track, (0, st + len(b) - len(track)))
+        track[st:st + len(b)] += b
+        if i % 25 == 0:
+            prog(jid, 50 + i / len(items) * 40, f"Building track {i + 1}/{len(items)}")
+    wav = f"{d}/dub.wav"
+    with wave.open(wav, "wb") as o:
+        o.setnchannels(1)
+        o.setsampwidth(2)
+        o.setframerate(RATE)
+        o.writeframes(np.clip(track, -32768, 32767).astype(np.int16).tobytes())
+    del track
+
+    if path.lower().endswith((".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus")):
+        # audio-only upload: return just the Khmer voice track (merge it with the video on your own PC)
+        prog(jid, 92, "Encoding Khmer voice track...")
+        out = f"{WORK}/dubbed_{jid}.mp3"
+        ff("-i", wav, "-b:a", "96k", out)
+        shutil.rmtree(d, ignore_errors=True)
+        return {"file": os.path.basename(out)}
+
+    prog(jid, 92, "Merging into video...")
+    out = f"{WORK}/dubbed_{jid}.mp4"
+    try:
+        if orig <= 0:
+            raise RuntimeError("no original audio wanted")
+        ff("-i", path, "-i", wav, "-filter_complex",
+           f"[0:a]volume={orig * 2}[o];[1:a]volume=2[d];[o][d]amix=inputs=2:duration=first:dropout_transition=0[a]",
+           "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", out)
+    except Exception:  # no original audio / option off: use the Khmer voice only
+        ff("-i", path, "-i", wav, "-map", "0:v:0", "-map", "1:a:0",
+           "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out)
+    shutil.rmtree(d, ignore_errors=True)
+    return {"file": os.path.basename(out)}
+
+
+@app.post("/api/dub")
+async def dub(video: str = Form(...), subs_json: str = Form(...),
+              gender: str = Form("female"), original_volume: float = Form(0.15),
+              speech_rate: int = Form(15)):
+    return run_job(do_dub, resolve(video), json.loads(subs_json), gender,
+                   max(0.0, min(1.0, original_volume)), max(-20, min(60, speech_rate)))
+
+
+@app.get("/api/download/{name}")
+def download(name: str):
+    p = os.path.join(WORK, os.path.basename(name))
+    if not os.path.isfile(p):
+        raise HTTPException(404, "file not found")
+    if p.endswith(".mp3"):
+        return FileResponse(p, media_type="audio/mpeg", filename="khmer_voice.mp3")
+    return FileResponse(p, media_type="video/mp4", filename="khmer_dubbed_movie.mp4")
+
+
+# ---------- start server + Cloudflare tunnel (no token needed) ----------
+import socket
+_s = socket.socket()
+_s.bind(("127.0.0.1", 0))  # let the system pick a free port
+PORT = _s.getsockname()[1]
+_s.close()
+threading.Thread(target=lambda: uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="warning"),
+                 daemon=True).start()
+time.sleep(2)
+
+CF = "/content/cloudflared"
+if not os.path.exists(CF):
+    urllib.request.urlretrieve(
+        "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64", CF)
+    os.chmod(CF, 0o755)
+subprocess.run(["pkill", "-f", "cloudflared"])
+proc = subprocess.Popen([CF, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{PORT}"],
+                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+url, t0 = None, time.time()
+for line in proc.stdout:
+    m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", line)
+    if m:
+        url = m.group(0)
+        break
+    if time.time() - t0 > 90:
+        break
+
+
+def _drain():
+    for _ in proc.stdout:
+        pass
+
+
+threading.Thread(target=_drain, daemon=True).start()
+
+print("=" * 50)
+print("BACKEND URL:", url)
+print("Paste this URL into the web page.")
+print("=" * 50)
+
+###cell 3###
+
+from google.colab import drive
+drive.mount('/content/drive')
+import shutil
+NAME = 'movie1.mp4'   # ប្តូរឈ្មោះនេះឱ្យត្រូវនឹងវីដេអូក្នុង Drive
+shutil.copy('/content/drive/MyDrive/' + NAME, '/content/' + NAME)
+print("copied", NAME)
+
+###cell 4 ###
+import os, glob, shutil
+f = max(glob.glob('/content/work/dubbed_*'), key=os.path.getmtime)
+name = 'khmer_dubbed_movie' + os.path.splitext(f)[1]
+shutil.copy(f, '/content/drive/MyDrive/' + name)
+print("Done:", name)
