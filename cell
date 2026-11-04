@@ -5,9 +5,9 @@
 
  ###cell 2 ###
 
-# ===== COLAB CELL 2: paste this whole file into one Colab cell and run it =====
-# (Cell 1 must be run first: see the install line in the instructions)
+# ===== COLAB CELL 2 (full: Cloudflare, EN/ZH -> Khmer, gender voices, volume, chunk upload) =====
 import os, re, json, wave, uuid, asyncio, shutil, subprocess, threading, time, urllib.request
+import requests
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -25,7 +25,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 jobs = {}
 
 
-# ---------- job helpers (long tasks run in background, the web page polls) ----------
+# ---------- job helpers ----------
 def run_job(fn, *args):
     jid = uuid.uuid4().hex[:10]
     jobs[jid] = {"status": "running", "progress": 0, "message": "", "result": None}
@@ -73,7 +73,17 @@ def health():
     return {"ok": True}
 
 
-# ---------- 1. upload ----------
+@app.get("/api/files")
+def files():
+    out = []
+    for f in sorted(os.listdir(WORK)):
+        p = os.path.join(WORK, f)
+        if os.path.isfile(p) and f.endswith((".mp4", ".mp3")):
+            out.append({"name": f, "mb": round(os.path.getsize(p) / 1e6, 1)})
+    return out
+
+
+# ---------- 1. upload (small file + chunked big file) ----------
 @app.post("/api/upload")
 async def upload(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename or "")[1] or ".mp4"
@@ -87,12 +97,44 @@ async def upload(file: UploadFile = File(...)):
     return {"video": name}
 
 
-# ---------- 2. real speech-to-text (Whisper) ----------
+def _safe_id(s):
+    return re.sub(r"[^a-zA-Z0-9]", "", s)[:40] or "x"
+
+
+@app.post("/api/upload_chunk")
+async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...), index: int = Form(...)):
+    d = f"{WORK}/chunks_{_safe_id(upload_id)}"
+    os.makedirs(d, exist_ok=True)
+    with open(f"{d}/{int(index):05d}.part", "wb") as o:
+        while True:
+            chunk = await file.read(8 * 1024 * 1024)
+            if not chunk:
+                break
+            o.write(chunk)
+    return {"ok": True}
+
+
+@app.post("/api/upload_done")
+async def upload_done(upload_id: str = Form(...), total: int = Form(...), ext: str = Form(".mp4")):
+    d = f"{WORK}/chunks_{_safe_id(upload_id)}"
+    ext = ext if re.fullmatch(r"\.[a-zA-Z0-9]{1,5}", ext or "") else ".mp4"
+    name = f"work/up_{uuid.uuid4().hex[:8]}{ext}"
+    with open(f"{ROOT}/{name}", "wb") as o:
+        for i in range(int(total)):
+            part = f"{d}/{i:05d}.part"
+            if not os.path.exists(part):
+                raise HTTPException(400, f"missing chunk {i}")
+            with open(part, "rb") as p:
+                shutil.copyfileobj(p, o, 8 * 1024 * 1024)
+    shutil.rmtree(d, ignore_errors=True)
+    return {"video": name}
+
+
+# ---------- 2. speech-to-text (Whisper) ----------
 _model = None  # (model, "cuda" or "cpu")
 
 
 def prepare_cuda():
-    """Pre-load the CUDA 12 libraries installed by pip (Colab's own CUDA can be a newer version)."""
     import ctypes, glob, site
     roots = list(site.getsitepackages()) + [site.getusersitepackages()]
     for sub in ("cuda_runtime", "cublas", "cudnn"):
@@ -131,7 +173,8 @@ def load_audio(path):
 
 
 def run_whisper(jid, model, audio, lang):
-    segs, info = model.transcribe(audio, language=(None if lang in ("", "auto") else lang), vad_filter=True)
+    segs, info = model.transcribe(audio, language=(None if lang in ("", "auto") else lang),
+                                  vad_filter=True)
     total = max(info.duration, 1)
     out = []
     for s in segs:
@@ -157,34 +200,95 @@ def do_transcribe(jid, path, lang):
 
 
 @app.post("/api/transcribe")
-async def transcribe(video: str = Form(...), language: str = Form("zh")):
+async def transcribe(video: str = Form(...), language: str = Form("auto")):
     return run_job(do_transcribe, resolve(video), language)
 
 
-# ---------- 3. real translation Chinese -> Khmer ----------
-def do_translate(jid, texts):
-    import time
-    from deep_translator import GoogleTranslator
-    tr = GoogleTranslator(source="zh-CN", target="km")
+# ---------- 2b. male / female detection (pitch) ----------
+def _f0(x, sr=16000):
+    fl, hop = int(0.04 * sr), int(0.02 * sr)
+    lo, hi = int(sr / 400), int(sr / 70)
+    n = 1 << (2 * fl - 1).bit_length()
+    vals = []
+    for s in range(0, len(x) - fl, hop):
+        f = x[s:s + fl].astype(np.float64)
+        f = f - f.mean()
+        if np.sqrt((f ** 2).mean()) < 0.01:
+            continue
+        sp = np.fft.rfft(f, n)
+        ac = np.fft.irfft(sp * np.conj(sp))[:hi + 1]
+        if ac[0] <= 0:
+            continue
+        k = lo + int(np.argmax(ac[lo:hi + 1]))
+        if ac[k] / ac[0] > 0.4:
+            vals.append(sr / k)
+    return float(np.median(vals)) if len(vals) >= 3 else None
+
+
+def do_detect(jid, path, segs):
+    prog(jid, 1, "Loading audio...")
+    audio = load_audio(path)
+    sr, out = 16000, []
+    for i, (a, b) in enumerate(segs):
+        a, b = int(float(a) * sr), int(float(b) * sr)
+        b = min(b, a + 4 * sr)
+        f0 = _f0(audio[a:b]) if b > a else None
+        out.append("" if f0 is None else ("male" if f0 < 165 else "female"))
+        if i % 20 == 0:
+            prog(jid, i / max(1, len(segs)) * 100, f"{i}/{len(segs)}")
+    return out
+
+
+@app.post("/api/detect_gender")
+async def detect_gender(video: str = Form(...), segs_json: str = Form(...)):
+    return run_job(do_detect, resolve(video), json.loads(segs_json))
+
+
+# ---------- 3. translation (Edge Translate first, Google fallback) ----------
+def _tr_edge(texts, token):
+    r = requests.post("https://api-edge.cognitive.microsofttranslator.com/translate",
+                      params={"to": "km", "api-version": "3.0"},
+                      headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"},
+                      json=[{"Text": t} for t in texts], timeout=60)
+    r.raise_for_status()
+    return [x["translations"][0]["text"] for x in r.json()]
+
+
+def _tr_google(texts):
     out = []
-    fails = 0
-    for i, t in enumerate(texts):
-        t = t.replace("\n", " ")
+    for t in texts:
+        r = requests.get("https://translate.googleapis.com/translate_a/single",
+                         params={"client": "gtx", "sl": "auto", "tl": "km", "dt": "t", "q": t}, timeout=20)
+        r.raise_for_status()
+        out.append("".join(p[0] for p in r.json()[0] if p[0]))
+        time.sleep(0.3)
+    return out
+
+
+def do_translate(jid, texts):
+    texts = [re.sub(r"\s+", " ", t).strip() or "." for t in texts]
+    out, B = [], 40
+    token, last_err = None, ""
+    for i in range(0, len(texts), B):
+        part = texts[i:i + B]
         res = None
-        for k in range(3):
+        for attempt in range(3):
             try:
-                res = tr.translate(t)
+                if token is None:
+                    token = requests.get("https://edge.microsoft.com/translate/auth", timeout=20).text
+                res = _tr_edge(part, token)
                 break
-            except Exception:
-                time.sleep(1.5 * (k + 1))
-        if not res:
-            fails += 1
-            res = ""
-        out.append(res)
-        time.sleep(0.25)
-        prog(jid, len(out) / len(texts) * 100, f"{len(out)}/{len(texts)} (fails {fails})")
-        if (fails >= 5 and fails == len(out)) or (fails >= 15 and fails > len(out) * 0.5):
-            raise RuntimeError("Google Translate is blocking this IP. Wait a while or change runtime.")
+            except Exception as e:
+                last_err = "Edge: " + str(e)
+                token = None
+                time.sleep(2 * (attempt + 1))
+        if res is None:
+            try:
+                res = _tr_google(part)
+            except Exception as e:
+                raise RuntimeError("Translate failed. " + last_err + " | Google: " + str(e))
+        out += res
+        prog(jid, len(out) / len(texts) * 100, f"{len(out)}/{len(texts)}")
     return out
 
 
@@ -202,7 +306,7 @@ async def tts_preview(text: str = Form(...), gender: str = Form("female"), speec
     return FileResponse(p, media_type="audio/mpeg")
 
 
-# ---------- 5. full dubbing, synced to EVERY subtitle ----------
+# ---------- 5. full dubbing ----------
 def ff(*args):
     subprocess.run(["ffmpeg", "-y", "-v", "error", *args], check=True)
 
@@ -219,10 +323,10 @@ def pcm(p):
         return w.readframes(w.getnframes())
 
 
-async def synth(items, voice, d, jid, rate):
+async def synth(items, d, jid, rate):
     sem, n = asyncio.Semaphore(6), 0
 
-    async def one(i, text):
+    async def one(i, it):
         nonlocal n
         f = f"{d}/c{i:05d}.mp3"
         async with sem:
@@ -230,7 +334,7 @@ async def synth(items, voice, d, jid, rate):
                 if os.path.exists(f) and os.path.getsize(f) > 0:
                     break
                 try:
-                    await edge_tts.Communicate(text, voice, rate=f"{rate:+d}%").save(f)
+                    await edge_tts.Communicate(it["text"], it["voice"], rate=f"{rate:+d}%").save(f)
                 except Exception:
                     if os.path.exists(f):
                         os.remove(f)
@@ -238,23 +342,22 @@ async def synth(items, voice, d, jid, rate):
         n += 1
         prog(jid, n / len(items) * 50, f"Voice {n}/{len(items)}")
 
-    await asyncio.gather(*(one(i, it["text"]) for i, it in enumerate(items)))
+    await asyncio.gather(*(one(i, it) for i, it in enumerate(items)))
 
 
-def do_dub(jid, path, subs, gender, orig, rate):
+def do_dub(jid, path, subs, gender, orig, rate, kvol):
     items = sorted(
         [{"start": float(s["start"]), "end": float(s["end"]),
-          "text": re.sub(r"\s+", " ", s.get("khmer", "")).strip()}
+          "text": re.sub(r"\s+", " ", s.get("khmer", "")).strip(),
+          "voice": VOICES.get(s.get("gender") or gender, VOICES["female"])}
          for s in subs if s.get("khmer", "").strip()],
         key=lambda x: x["start"])
     if not items:
         raise ValueError("No Khmer text to dub")
     d = f"{WORK}/dub_{jid}"
     os.makedirs(d, exist_ok=True)
-    asyncio.run(synth(items, VOICES.get(gender, VOICES["female"]), d, jid, rate))
+    asyncio.run(synth(items, d, jid, rate))
 
-    # Every clip is placed at its EXACT start time (no drift). A clip that is too long
-    # is sped up (max 2x); if it still does not fit it may slightly overlap the next one.
     tmp = f"{d}/t.wav"
     track = np.zeros(int((items[-1]["end"] + 15) * RATE), dtype=np.int32)
     for i, it in enumerate(items):
@@ -284,24 +387,25 @@ def do_dub(jid, path, subs, gender, orig, rate):
     del track
 
     if path.lower().endswith((".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg", ".opus")):
-        # audio-only upload: return just the Khmer voice track (merge it with the video on your own PC)
         prog(jid, 92, "Encoding Khmer voice track...")
         out = f"{WORK}/dubbed_{jid}.mp3"
-        ff("-i", wav, "-b:a", "96k", out)
+        ff("-i", wav, "-filter:a", f"volume={kvol * 0.67:.2f},alimiter=limit=0.95", "-b:a", "96k", out)
         shutil.rmtree(d, ignore_errors=True)
         return {"file": os.path.basename(out)}
 
     prog(jid, 92, "Merging into video...")
     out = f"{WORK}/dubbed_{jid}.mp4"
+    dv = kvol * 0.67  # UI default 300% ~= old fixed volume 2
     try:
         if orig <= 0:
             raise RuntimeError("no original audio wanted")
         ff("-i", path, "-i", wav, "-filter_complex",
-           f"[0:a]volume={orig * 2}[o];[1:a]volume=2[d];[o][d]amix=inputs=2:duration=first:dropout_transition=0[a]",
+           f"[0:a]volume={orig * 2}[o];[1:a]volume={dv:.2f}[d];"
+           f"[o][d]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.95[a]",
            "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", out)
-    except Exception:  # no original audio / option off: use the Khmer voice only
-        ff("-i", path, "-i", wav, "-map", "0:v:0", "-map", "1:a:0",
-           "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out)
+    except Exception:
+        ff("-i", path, "-i", wav, "-filter_complex", f"[1:a]volume={dv:.2f},alimiter=limit=0.95[a]",
+           "-map", "0:v:0", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out)
     shutil.rmtree(d, ignore_errors=True)
     return {"file": os.path.basename(out)}
 
@@ -309,9 +413,10 @@ def do_dub(jid, path, subs, gender, orig, rate):
 @app.post("/api/dub")
 async def dub(video: str = Form(...), subs_json: str = Form(...),
               gender: str = Form("female"), original_volume: float = Form(0.15),
-              speech_rate: int = Form(15)):
+              speech_rate: int = Form(15), khmer_volume: float = Form(3.0)):
     return run_job(do_dub, resolve(video), json.loads(subs_json), gender,
-                   max(0.0, min(1.0, original_volume)), max(-20, min(60, speech_rate)))
+                   max(0.0, min(1.0, original_volume)), max(-20, min(60, speech_rate)),
+                   max(1.0, min(6.0, khmer_volume)))
 
 
 @app.get("/api/download/{name}")
@@ -327,7 +432,7 @@ def download(name: str):
 # ---------- start server + Cloudflare tunnel (no token needed) ----------
 import socket
 _s = socket.socket()
-_s.bind(("127.0.0.1", 0))  # let the system pick a free port
+_s.bind(("127.0.0.1", 0))
 PORT = _s.getsockname()[1]
 _s.close()
 threading.Thread(target=lambda: uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="warning"),
