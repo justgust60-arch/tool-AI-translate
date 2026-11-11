@@ -159,13 +159,14 @@ def get_model(cpu=False):
 
 
 def load_audio(path):
-    """Extract audio to a small 16 kHz mono wav file on disk first (cached), then decode it."""
+    """Extract 16 kHz mono wav to disk (cached), then read it with wave+numpy (no av needed)."""
     wav = path + ".16k.wav"
     if not os.path.exists(wav) or os.path.getsize(wav) == 0:
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", path, "-vn", "-ac", "1",
                         "-ar", "16000", "-c:a", "pcm_s16le", wav], check=True)
-    from faster_whisper.audio import decode_audio
-    return decode_audio(wav, sampling_rate=16000)
+    with wave.open(wav, "rb") as w:
+        raw = w.readframes(w.getnframes())
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
 
 def run_whisper(jid, model, audio, lang):
