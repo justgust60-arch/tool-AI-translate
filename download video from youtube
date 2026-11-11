@@ -1,0 +1,12 @@
+cell 1
+  
+from google.colab import drive
+drive.mount('/content/drive')
+
+cell 2
+  
+!pip install yt-dlp
+
+cell 3
+
+!yt-dlp -o "/content/drive/MyDrive/%(title)s.%(ext)s" "ដាក់_LINK_YOUTUBE_ថ្មី_នៅត្រង់នេះ"
