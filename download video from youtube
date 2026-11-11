@@ -10,3 +10,7 @@ cell 2
 cell 3
 
 !yt-dlp -o "/content/drive/MyDrive/%(title)s.%(ext)s" "ដាក់_LINK_YOUTUBE_ថ្មី_នៅត្រង់នេះ"
+
+
+
+!yt-dlp --merge-output-format mp4 -o "/content/drive/MyDrive/%(title)s.%(ext)s" "ដាក់_LINK_YOUTUBE_នៅទីនេះ"
